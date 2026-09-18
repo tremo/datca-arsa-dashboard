@@ -11,7 +11,7 @@
     a{color:var(--green);font-weight:700;text-decoration:none} a:hover{text-decoration:underline}
     header{background:radial-gradient(circle at 80% 10%,#244c3d 0,transparent 32%),var(--dark);color:#fff;padding:42px 20px 78px}
     .wrap{max-width:1480px;margin:auto}.eyebrow{font-size:12px;text-transform:uppercase;letter-spacing:.17em;color:#a9c8ba;font-weight:800}
-    h1{font-size:clamp(32px,5vw,58px);line-height:1.02;margin:12px 0 14px;max-width:900px}.lead{max-width:820px;color:#d6e0db;font-size:17px}
+    h1{font-size:clamp(32px,5vw,58px);line-height:1.02;margin:12px 0 14px;max-width:900px}.lead{max-width:820px;color:#d6e0db;font-size:17px}.nav{display:flex;gap:8px;margin-top:24px}.nav a{border:1px solid #5d776d;border-radius:999px;padding:8px 14px;color:#dcebe4}.nav a.active,.nav a:hover{background:#fff;color:var(--dark);text-decoration:none}
     .snapshot{font-size:13px;color:#a9bbb3;margin-top:20px}.metrics{display:grid;grid-template-columns:repeat(7,minmax(120px,1fr));gap:12px;margin:-48px auto 28px;padding:0 20px;max-width:1480px}
     .metric{background:var(--card);border:1px solid var(--line);border-radius:18px;padding:18px;box-shadow:var(--shadow)}.metric b{font-size:28px;display:block}.metric span{font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.06em;font-weight:800}
     main{padding:0 20px 48px}.panel{background:rgba(255,254,250,.92);border:1px solid var(--line);border-radius:20px;box-shadow:var(--shadow);margin:20px 0;overflow:hidden}.panel-head{padding:22px 24px;border-bottom:1px solid var(--line)}
@@ -28,7 +28,7 @@
   </style>
 </head>
 <body>
-  <header><div class="wrap"><div class="eyebrow">Mert’in Datça Arazi Araştırması</div><h1>Kanıta göre sıralanmış adaylar</h1><div class="lead">Fiyat, alan, parsel kimliği, resmî kayıt, rota, yol ve sit kanıtlarının mevcut durumuna göre hazırlanmış araştırma görünümü.</div><div id="snapshot" class="snapshot">Veri yükleniyor…</div></div></header>
+  <header><div class="wrap"><div class="eyebrow">Mert’in Datça Arazi Araştırması</div><h1>Kanıta göre sıralanmış adaylar</h1><div class="lead">Fiyat, alan, parsel kimliği, resmî kayıt, rota, yol ve sit kanıtlarının mevcut durumuna göre hazırlanmış araştırma görünümü.</div><nav class="nav"><a class="active" href="index.html">Liste</a><a href="map.html">Harita</a></nav><div id="snapshot" class="snapshot">Veri yükleniyor…</div></div></header>
   <section id="metrics" class="metrics"></section>
   <main class="wrap">
     <section class="panel"><div class="panel-head"><h2>Çalışma günlüğü</h2><div class="sub">Başarı ve hata sayıları ilan sonucu değil, kuyruktaki görev denemeleridir.</div></div><div id="timeline" class="timeline"></div></section>
