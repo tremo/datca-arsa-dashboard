@@ -22,16 +22,16 @@
     .rank{font-weight:900;font-size:16px}.score{display:inline-grid;place-items:center;width:42px;height:42px;border-radius:50%;font-weight:900;background:#e7f3ed;color:var(--green)}.score.low{background:#f5e9e7;color:var(--red)}
     .category,.sit{font-size:11px;font-weight:900;border-radius:999px;padding:5px 8px;white-space:nowrap}.cat-best{background:#dff2e8;color:#136047}.cat-cond{background:#e6eef6;color:#315c83}.cat-wait{background:#f6ecd8;color:#86520f}.cat-out{background:#f2e3e1;color:#8f342e}.sit-clear{background:#dff2e8;color:#136047}.sit-low{background:#e6eef6;color:#315c83}.sit-mid{background:#f6ecd8;color:#86520f}.sit-high{background:#f2e3e1;color:#8f342e}.sit-unknown{background:#ecefec;color:#59655f}.title{font-weight:800;max-width:310px}.minor{color:var(--muted);font-size:12px;margin-top:3px}.links{white-space:nowrap}.links a{display:inline-block;margin-right:8px;font-size:12px}
     .ev{display:flex;gap:4px;flex-wrap:wrap;max-width:260px}.dot{width:19px;height:19px;border-radius:50%;display:grid;place-items:center;color:#fff;font-size:10px;font-weight:900}.official{background:var(--green)}.statement{background:var(--amber)}.missing{background:#c7ccc8;color:#5d6964}.legend{display:flex;gap:13px;flex-wrap:wrap;padding:14px 24px;background:#f8f8f4;border-top:1px solid var(--line);font-size:12px;color:var(--muted)}
-    .method{padding:22px 24px;color:#4a5752}.method strong{color:var(--ink)} footer{padding:24px 20px 50px;color:var(--muted);font-size:12px;text-align:center}
+    .method{padding:22px 24px;color:#4a5752}.method strong{color:var(--ink)} footer{padding:24px 20px 50px;color:var(--muted);font-size:12px;text-align:center}.authbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:18px}.authbar button{border:0;border-radius:999px;padding:10px 16px;font:inherit;font-weight:800;cursor:pointer}.authbar .primary{background:#fff;color:var(--dark)}.authbar .secondary{background:transparent;color:#dcebe4;border:1px solid #5d776d}.authmsg{color:#d6e0db;font-size:13px}.private-content{display:none}.private-content.ready{display:block}
     @media(max-width:1000px){.status-grid{grid-template-columns:1fr 1fr}.status-pending{grid-row:auto;grid-column:span 2}.metrics{grid-template-columns:repeat(2,1fr)}.timeline{grid-template-columns:1fr}.day{border-left:0;border-top:1px solid var(--line)}.controls{grid-template-columns:1fr 1fr}.day p{min-height:0}}
     @media(max-width:620px){header{padding-top:28px}.status-grid{grid-template-columns:1fr}.status-pending{grid-column:auto}.status-card{padding:17px}.metrics{grid-template-columns:1fr 1fr}.metric{padding:14px}.metric b{font-size:22px}.controls{grid-template-columns:1fr}.panel-head{padding:18px}.timeline{padding:0}.table-wrap{max-height:none}}
   </style>
 </head>
 <body>
-  <header><div class="wrap"><div class="eyebrow">Mert’in Datça Arazi Araştırması</div><h1>Alım fırsatına göre sıralanmış adaylar</h1><div class="lead">Emsallerine göre ucuzluk ve Mertur’a yakınlığı birlikte değerlendiren satın alma görünümü. Kanıt durumu puandan bağımsız not edilir.</div><nav class="nav"><a class="active" href="index.html">Liste</a><a href="map.html">Harita</a></nav><div id="snapshot" class="snapshot">Veri yükleniyor…</div></div></header>
-  <section class="status-wrap"><div class="status-card"><h2>Statü</h2><div id="status" class="status-grid"><div class="status-main">Statü verisi yükleniyor…</div></div><p id="statusNote" class="status-note"></p></div></section>
-  <section id="metrics" class="metrics"></section>
-  <main class="wrap">
+  <header><div class="wrap"><div class="eyebrow">Mert’in Datça Arazi Araştırması</div><h1>Alım fırsatına göre sıralanmış adaylar</h1><div class="lead">Emsallerine göre ucuzluk ve Mertur’a yakınlığı birlikte değerlendiren satın alma görünümü. Kanıt durumu puandan bağımsız not edilir.</div><nav class="nav"><a class="active" href="index.html">Liste</a><a href="map.html">Harita</a></nav><div id="snapshot" class="snapshot">Google hesabınızla giriş yapın.</div><div class="authbar"><button id="signIn" class="primary">Google ile giriş</button><button id="signOut" class="secondary" hidden>Çıkış</button><span id="authMessage" class="authmsg">Veriler yalnızca yetkili hesaba açıktır.</span></div></div></header>
+  <section class="status-wrap private-content"><div class="status-card"><h2>Statü</h2><div id="status" class="status-grid"><div class="status-main">Statü verisi yükleniyor…</div></div><p id="statusNote" class="status-note"></p></div></section>
+  <section id="metrics" class="metrics private-content"></section>
+  <main class="wrap private-content">
     <section class="panel"><div class="panel-head"><h2>Çalışma günlüğü</h2><div class="sub">Başarı ve hata sayıları ilan sonucu değil, kuyruktaki görev denemeleridir.</div></div><div id="timeline" class="timeline"></div></section>
     <section class="panel">
       <div class="panel-head"><h2>Alım fırsatı sırası</h2><div class="sub">Puanın %70’i emsaline göre ucuzluk, %30’u Mertur yakınlığıdır. Kanıt yalnız nottur; puanı etkilemez.</div></div>
@@ -41,14 +41,23 @@
       <div id="method" class="method"></div>
     </section>
   </main><footer>Bu dashboard yatırım tavsiyesi, tapu incelemesi veya imar/hukuk görüşü değildir. Kaynak verinin kamuya uygun, redakte edilmiş anlık görüntüsüdür.</footer>
-<script>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
+import {getAuth,GoogleAuthProvider,onAuthStateChanged,signInWithPopup,signOut as firebaseSignOut} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
+import {collection,doc,getDoc,getDocs,getFirestore,query,where} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+const firebaseConfig={projectId:'datca-arsa',appId:'1:978587692621:web:0cf933d39328b1138d7604',storageBucket:'datca-arsa.firebasestorage.app',apiKey:'AIzaSyClWwdWqDg4ABvgyqkUAkGypFVJ9HJxGgY',authDomain:'datca-arsa.firebaseapp.com',messagingSenderId:'978587692621'};
+const app=initializeApp(firebaseConfig),auth=getAuth(app),db=getFirestore(app),provider=new GoogleAuthProvider();
+provider.setCustomParameters({prompt:'select_account'});
 const fmtTL=n=>n==null?'—':new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(n);
 const fmtNum=n=>n==null?'—':new Intl.NumberFormat('tr-TR',{maximumFractionDigits:1}).format(n);
 const cls=c=>c==='Öne çıkan'||c==='Tam doğrulanmış'?'cat-best':c==='Koşullu aday'?'cat-cond':c==='Elendi'?'cat-out':'cat-wait';
 const sitCls=s=>s==='Sit yok'?'sit-clear':s==='3. derece doğal sit'?'sit-low':s==='2. derece doğal sit'||s==='Sit var (türü belirsiz)'||s==='Tarihî sit (türü belirsiz)'?'sit-mid':s==='1. derece doğal sit'||s==='Arkeolojik sit'?'sit-high':'sit-unknown';
 const evDot=s=>s==='verified'?'<i class="dot official" title="Resmî/bağımsız kanıt">R</i>':s==='verified_by_statement'?'<i class="dot statement" title="Satıcı/emlakçı beyanı">B</i>':'<i class="dot missing" title="Eksik">–</i>';
 let all=[], view=[], sortKey='rank', sortDir=1;
-fetch('data.json').then(r=>r.json()).then(data=>{
+async function loadDashboard(){
+  const [statusSnap,listingsSnap]=await Promise.all([getDoc(doc(db,'meta','status')),getDocs(query(collection(db,'listings'),where('dashboardIncluded','==',true)))]);
+  if(!statusSnap.exists())throw new Error('Statü belgesi bulunamadı.');
+  const meta=statusSnap.data(),data={...meta,records:listingsSnap.docs.map(d=>d.data())};
   all=data.records; document.querySelector('#snapshot').textContent=`Snapshot: ${new Date(data.generatedAt).toLocaleString('tr-TR')} · ${data.source}`;
   const s=data.status, tracked=v=>v==null?'henüz izlenmiyor':v, searchDate=s.lastSearchAt?new Date(s.lastSearchAt).toLocaleString('tr-TR',{dateStyle:'long',timeStyle:'short'}):'bilinmiyor';
   document.querySelector('#status').innerHTML=`<div class="status-main"><span class="status-label">Sahibinden Kriterlere Uyan İlan Sayısı</span><b>${s.rawCount}</b><div class="minor">en son arama: ${searchDate}</div></div><div class="status-pending"><h3>Değerlendirmesi Devam Edenlerin Statüleri <span class="minor">(${s.pending} ilan)</span></h3><div class="status-lines"><div class="status-line"><span>— Ada/Parsel Netleştirilmeyi Bekleyen</span><b>${s.pendingBreakdown.parcelIdentity}</b></div><div class="status-line"><span>— Sit Durumu Netleştirilmeyi Bekleyen</span><b>${s.pendingBreakdown.sit}</b></div><div class="status-line"><span>— Kadastral Yol Netleştirilmeyi Bekleyen</span><b>${s.pendingBreakdown.neighborAccess}</b></div><div class="status-line"><span>— Resmî Parsel (TKGM) Netleştirilmeyi Bekleyen</span><b>${s.pendingBreakdown.officialParcel}</b></div><div class="status-line"><span>— Mertur Rotası Netleştirilmeyi Bekleyen</span><b>${s.pendingBreakdown.route}</b></div></div></div><div class="status-main"><span class="status-label">Değerlendirmesi Tamamlananlar</span><b>${s.completed}</b></div><div class="status-main"><span class="status-label">Değerlendirme Pozitif</span><b>${s.positive}</b></div><div class="status-weekly"><span class="status-label">Bu hafta Sahibinden’e yeni gelen ilan sayısı</span><b>${tracked(s.newThisWeek)}</b></div><div class="status-weekly"><span class="status-label">Bu hafta Sahibinden’den silinen ilan sayısı</span><b>${tracked(s.removedThisWeek)}</b></div>`;
@@ -60,8 +69,11 @@ fetch('data.json').then(r=>r.json()).then(data=>{
   [...new Set(all.map(x=>x.category))].forEach(v=>category.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
   [...new Set(all.map(x=>x.neighborhood).filter(x=>x&&x!=='—'))].sort((a,b)=>a.localeCompare(b,'tr')).forEach(v=>neighborhood.insertAdjacentHTML('beforeend',`<option>${v}</option>`));
   [...new Set(all.map(x=>x.officialType).filter(x=>x&&x!=='—'))].sort((a,b)=>a.localeCompare(b,'tr')).forEach(v=>typeOptions.insertAdjacentHTML('beforeend',`<label><input type="checkbox" value="${v.replaceAll('&','&amp;').replaceAll('"','&quot;')}"><span>${v}</span></label>`));
-  [...new Set(all.map(x=>x.sitStatus).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr')).forEach(v=>sitOptions.insertAdjacentHTML('beforeend',`<label><input type="checkbox" value="${v.replaceAll('&','&amp;').replaceAll('"','&quot;')}"><span>${v}</span></label>`)); render();
-});
+  [...new Set(all.map(x=>x.sitStatus).filter(Boolean))].sort((a,b)=>a.localeCompare(b,'tr')).forEach(v=>sitOptions.insertAdjacentHTML('beforeend',`<label><input type="checkbox" value="${v.replaceAll('&','&amp;').replaceAll('"','&quot;')}"><span>${v}</span></label>`)); document.querySelectorAll('.private-content').forEach(x=>x.classList.add('ready')); render();
+}
+signIn.addEventListener('click',()=>signInWithPopup(auth,provider).catch(e=>authMessage.textContent=`Giriş başarısız: ${e.message}`));
+signOut.addEventListener('click',()=>firebaseSignOut(auth));
+onAuthStateChanged(auth,async user=>{document.querySelectorAll('.private-content').forEach(x=>x.classList.remove('ready'));if(!user){signIn.hidden=false;signOut.hidden=true;authMessage.textContent='Veriler yalnızca yetkili hesaba açıktır.';snapshot.textContent='Google hesabınızla giriş yapın.';return}signIn.hidden=true;signOut.hidden=false;authMessage.textContent=user.email;try{await loadDashboard()}catch(e){snapshot.textContent='Firestore verisi yüklenemedi.';authMessage.textContent=`${user.email} · ${e.message}`}});
 function render(){
   const q=search.value.toLocaleLowerCase('tr'), cat=category.value, hood=neighborhood.value, ef=evidence.value, min=Number(minArea.value)||0, max=Number(maxArea.value)||Infinity, minKm=Number(minDistance.value)||0, maxKm=Number(maxDistance.value)||Infinity, selectedTypes=[...typeOptions.querySelectorAll('input:checked')].map(x=>x.value), selectedSits=[...sitOptions.querySelectorAll('input:checked')].map(x=>x.value);
   typeSummary.textContent=selectedTypes.length?`Tapu niteliği · ${selectedTypes.length} seçili`:'Tapu niteliği · Tümü';
