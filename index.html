@@ -59,8 +59,9 @@ const esc=s=>String(s??'—').replaceAll('&','&amp;').replaceAll('<','&lt;').rep
 let all=[], view=[], sortKey='rank', sortDir=1, feedback=new Map(), activeListing=null, statusFilter='';
 const requiredEvidence=['parselKimliği','resmîParsel','doğalSit','arkeolojikSit','yolKomşu','rota'];
 const isActive=r=>r.lifecycle!=='excluded';
-const isMissing=(r,key)=>(r.evidence||{})[key]==='missing';
-const isCompleted=r=>requiredEvidence.every(key=>!isMissing(r,key));
+const isVerified=(r,key)=>(r.evidence||{})[key]==='verified';
+const isMissing=(r,key)=>!isVerified(r,key);
+const isCompleted=r=>requiredEvidence.every(key=>isVerified(r,key));
 const statusPredicates={pending:r=>isActive(r)&&!isCompleted(r),parcelIdentity:r=>isActive(r)&&isMissing(r,'parselKimliği'),sit:r=>isActive(r)&&(isMissing(r,'doğalSit')||isMissing(r,'arkeolojikSit')),neighborAccess:r=>isActive(r)&&isMissing(r,'yolKomşu'),officialParcel:r=>isActive(r)&&isMissing(r,'resmîParsel'),route:r=>isActive(r)&&isMissing(r,'rota'),completed:isCompleted,positive:r=>isActive(r)&&isCompleted(r)};
 const statusLabels={pending:'Değerlendirmesi devam edenler',parcelIdentity:'Ada/parsel bekleyenler',sit:'Sit durumu bekleyenler',neighborAccess:'Kadastral yol bekleyenler',officialParcel:'Resmî parsel bekleyenler',route:'Mertur rotası bekleyenler',completed:'Değerlendirmesi tamamlananlar',positive:'Pozitif tamamlananlar'};
 async function loadDashboard(){
