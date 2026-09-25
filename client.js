@@ -16,11 +16,16 @@ export const num=v=>v==null?'—':new Intl.NumberFormat('tr-TR',{maximumFraction
 export const money=v=>v==null?'Fiyat yok':new Intl.NumberFormat('tr-TR',{style:'currency',currency:'TRY',maximumFractionDigits:0}).format(v);
 export const date=v=>v&&!Number.isNaN(Date.parse(v))?new Date(v).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}):'Zaman kaydı yok';
 export const safeUrl=v=>{try{const u=new URL(v);return u.protocol==='https:'?u.href:''}catch{return ''}};
-export const link=(url,label)=>safeUrl(url)?`<a class="button" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`:'';
+export const link=(url,label,extra='')=>safeUrl(url)?`<a class="button${extra?' '+extra:''}" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`:'';
 export const labels={official:'Resmî kaynak',statement:'Satıcı / emlakçı beyanı',provisional:'Kendi kuralın / sit sınırında',pending:'Bekliyor',conflict:'Çelişkili'};
 export const kindLabels={natural_sit:'Doğal sit',archaeological_sit:'Arkeolojik sit',neighbor_access:'Kadastral yol',route:'Mertur rotası'};
 export const stageLabels={listingDetail:'İlan ayrıntısı',parcelIdentity:'Ada / parsel',officialParcel:'Tapu kaydı (TKGM)',verification:'Sit · yol · rota',finalReview:'Final inceleme',complete:'Final sonuçlandı',excluded:'Sistem eledi'};
 export const badge=(text,grade='')=>`<span class="badge ${esc(grade)}">${esc(text)}</span>`;
+// B11: one status vocabulary and colour for the list, the detail and the map. “Final: olumlu değil” covers every final decision that is not positive.
+export const STATUS={active:{label:'Araştırılıyor',color:'#00d7ef'},positive:{label:'Koşullu olumlu',color:'#ffd94a'},held:{label:'Final: olumlu değil',color:'#c38bff'},excluded:{label:'Elendi',color:'#ff5b55',dashed:true}};
+export const statusKey=r=>r.lifecycle==='excluded'?'excluded':r.recommended?'positive':r.reviewOutcome==='held'?'held':'active';
+export const swatch=key=>`<i class="swatch${STATUS[key].dashed?' is-dashed':''}" style="--swatch:${STATUS[key].color}" aria-hidden="true"></i>`;
+export const statusBadge=r=>{const key=statusKey(r);return `<span class="badge status-badge status-${key}">${swatch(key)}${esc(STATUS[key].label)}</span>`};
 export const area=r=>r.officialArea??r.listingArea;
 // B13: titles typed in capitals are shown in sentence case (place names keep their capital); the original stays in the detail.
 const PLACES=['datça','datca','palamutbükü','knidos','yaka','sındı','cumalı','hızırşah','mesudiye','karaköy','kızlan','emecik','reşadiye','iskele','yazı','ovabükü','hayıtbükü','kargı','gebekum','eksera','mersincik','bencik','aktur','ılıca','kurubük','değirmenbükü','marmaris','muğla','bozburun','pınarönü','körmen','pelit','zeytincik','ege','yunan'];
@@ -45,7 +50,7 @@ export function connect(onLoaded,onReset){
  const records=l.docs.map(d=>decode(d.data()));
  // E7: a publish in progress no longer locks the app; the page opens with a warning instead.
  document.querySelector('.stale-banner')?.remove();if(records.length!==meta.recordCount){writeStamp('');const warn=document.createElement('p');warn.className='stale-banner';warn.setAttribute('role','status');warn.textContent=`Veri yayını sürüyor olabilir: ${meta.recordCount} ilan beklenirken ${records.length} ilan geldi. Birkaç dakika sonra sayfayı yenile.`;$('workspace').prepend(warn)}
- await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()]))});if(token!==epoch)return;$('source').textContent=`Kaynak: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · ${meta.source}`;$('gate').hidden=true;$('workspace').hidden=false;
+ await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()]))});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}`;$('gate').hidden=true;$('workspace').hidden=false;
  }catch(e){if(token!==epoch)return;$('gateTitle').textContent='Veriler yüklenemedi';message.className='auth-error';message.textContent=e.code==='permission-denied'?'Bu hesabın erişim yetkisi yok. Çıkış yapıp yetkili Google hesabıyla giriş yap.':(e.code||e.message);$('retry').hidden=false}}
  $('retry').onclick=()=>load(auth.currentUser);onAuthStateChanged(auth,load);
 }
