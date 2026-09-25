@@ -444,9 +444,15 @@ svg.parcel-diagram{display:block;width:100%;height:240px;background:var(--soft);
 .scenario-panel>summary>span:last-child{border-radius:999px;padding:5px 9px;background:#e8eee8;color:#355548;font-size:10px;font-weight:700}
 .scenario-panel>summary>span.is-modified{background:#f4e4c7;color:#72521b}
 .scenario-body{padding:0 17px 17px;border-top:1px solid var(--line)}
-.scenario-intro{display:grid;grid-template-columns:180px 1fr;gap:18px;align-items:center;padding:14px 0}
+.scenario-intro{display:grid;grid-template-columns:280px 1fr;gap:18px;align-items:center;padding:14px 0}
 .scenario-intro p{margin:0;font-size:12px;color:var(--muted)}
-.scenario-intro p:first-child{display:flex;flex-direction:column}
+.scenario-tally p{display:flex;flex-direction:column}
+.scenario-tally p+p{flex-direction:row;flex-wrap:wrap;gap:4px 10px;margin-top:6px;font-size:11px}
+.scenario-tally span[class^="tally-"]{display:inline-flex;align-items:center;gap:5px;color:var(--ink)}
+.scenario-tally span[class^="tally-"]::before{content:"";width:9px;height:9px;border-radius:50%;flex:none}
+.tally-fit::before{background:var(--green)}
+.tally-unknown::before{background:#e5ecf5;box-shadow:inset 0 0 0 1px #34537d}
+.tally-fail::before{background:#e8a868}
 .scenario-intro strong{font-size:24px;color:var(--ink)}
 .scenario-columns{display:grid;grid-template-columns:1.3fr .7fr;gap:12px}
 .scenario-panel fieldset{min-width:0;border:1px solid var(--line);border-radius:13px;padding:13px;background:white}
@@ -462,12 +468,19 @@ svg.parcel-diagram{display:block;width:100%;height:240px;background:var(--soft);
 .weight-control input{width:100%;min-height:30px;padding:0}
 .weight-control output{color:var(--green)}
 .custom-rules{margin-top:12px}
-.rule-builder{display:grid;grid-template-columns:1fr .6fr 1fr auto;gap:8px;align-items:end}
+.rule-builder{display:grid;grid-template-columns:1fr .6fr 1fr 1fr auto;gap:8px;align-items:end}
 .rule-builder label{font-size:10px}
 .rule-builder select,.rule-builder input,.rule-builder button{min-height:39px;padding:8px}
 .custom-rule-list{display:flex;gap:6px;flex-wrap:wrap;margin-top:10px}
-.rule-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid #c5d2c9;background:#edf3ed;border-radius:999px;padding:5px 6px 5px 9px;font-size:10px}
-.rule-chip button{min-height:22px;width:22px;padding:0;border:0;background:transparent}
+.rule-chip{display:inline-flex;align-items:center;gap:8px;border:1px solid #c5d2c9;background:#edf3ed;border-radius:14px;padding:6px 6px 6px 11px;font-size:11px}
+.rule-chip b,.rule-chip small{display:block}
+.rule-chip small{color:var(--muted);font-size:10px}
+.rule-chip .rule-unknown{min-height:28px;padding:3px 9px;border-radius:999px;font-size:10px;background:var(--paper)}
+.rule-chip .rule-remove{min-height:28px;width:28px;padding:0;border:0;background:transparent;font-size:16px}
+.score-rules-title{margin:14px 0 4px;font-size:11px}
+.score-rules{margin:0;padding-left:17px;font-size:11px;color:var(--muted)}
+.score-rules li+li{margin-top:3px}
+.weight-control>span>span{display:inline-flex;gap:5px}
 .scenario-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;padding-top:12px}
 .scenario-actions>div{display:flex;gap:7px}
 .scenario-actions button{min-height:38px;padding:8px 10px;font-size:11px}
@@ -475,6 +488,10 @@ svg.parcel-diagram{display:block;width:100%;height:240px;background:var(--soft);
 .only-eligible{display:flex;align-items:center;gap:8px;font-size:11px}
 .scenario-banner{display:flex;align-items:baseline;gap:10px;padding:9px 20px;background:#f6ebd7;color:#684b18;text-align:left;font-size:11px}
 .scenario-banner b{font-size:10px;letter-spacing:.08em}
+.rule-banner{display:flex;align-items:baseline;gap:10px;padding:9px 20px;text-align:left;font-size:11px}
+.rule-banner b{font-size:10px;letter-spacing:.08em;flex:none}
+.rule-banner.is-fail{background:#fdf0e1;color:#7a3d0c}
+.rule-banner.is-unknown{background:#eef2f8;color:#34537d;border-bottom:1px dashed #9fb3cf}
 .stale-banner{margin:0 0 20px;padding:12px 16px;border:1px solid #e3cf9f;border-radius:12px;background:#f6ebd7;color:#684b18;font-size:14px}
 .listing.is-scenario-revealed{box-shadow:inset 4px 0 #c98b28}
 .listing-score b,.listing-score small{display:inline}
@@ -488,6 +505,7 @@ svg.parcel-diagram{display:block;width:100%;height:240px;background:var(--soft);
   .scenario-columns{grid-template-columns:1fr}
   .hard-gates{grid-template-columns:1fr 1fr}
   .rule-builder{grid-template-columns:1fr 1fr}
+  .rule-banner{padding:9px 15px}
   .rule-builder button{grid-column:1/-1}
   .scenario-intro{grid-template-columns:1fr}
 }
