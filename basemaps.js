@@ -1,7 +1,7 @@
 // Shared basemaps for both the compact evidence preview and full map.
-// Esri World Imagery has useful native detail in Datça through zoom 18. Requests
-// above that level return placeholder/resampled tiles here, so maxZoom is capped
-// at 18 to avoid implying detail that the source does not contain.
+// Esri World Imagery has useful native detail in Datça through zoom 18. Tiles
+// are never requested above 18 (maxNativeZoom); at the maps' zoom 19 Leaflet
+// enlarges the zoom-18 image instead of leaving the satellite view blank.
 export const BASEMAP_STORAGE_KEY='datca-basemap';
 
 const selectedBasemap=()=>{try{return localStorage.getItem(BASEMAP_STORAGE_KEY)==='street'?'street':'satellite'}catch{return 'satellite'}};
@@ -14,7 +14,7 @@ export function installBasemaps(map,{compact=false}={}){
     attribution:'&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap katkıcıları</a>'
   });
   const satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{
-    maxNativeZoom:18,maxZoom:18,tileSize:256,
+    maxNativeZoom:18,maxZoom:19,tileSize:256,
     attribution:'Source: <a href="https://www.esri.com/">Esri</a>, Vantor, Earthstar Geographics ve GIS User Community'
   });
   const layers={street,satellite};
