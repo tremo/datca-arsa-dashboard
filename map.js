@@ -1,4 +1,4 @@
-import {$,esc,num,money,area,connect,decode} from './client.js';
+import {$,esc,num,money,area,readableTitle,connect,decode} from './client.js';
 import {exclusionText} from './evidence.js';
 import {installBasemaps,addParcelEvidence,fitParcel,googleSatelliteHref,parcelStyle} from './basemaps.js';
 import {SCENARIO_STORAGE_KEY,defaultScenario,sanitizeScenario,scenarioFromUrl,scenarioVisible,scenarioIsDefault,scenarioParam} from './scenario.js';
@@ -34,7 +34,7 @@ function render(){
   }
   $('mapCount').textContent=`${visible.length} / ${all.length} koordinatlı ilan`;
   $('mapNote').textContent=`${total-all.length} ilanda parsel geometrisi yok; haritada gösterilmez. Uydu görüntüsü 18. yakınlaştırmadan sonra büyütülerek gösterilir. Yol ve komşu kanıtları ilan ayrıntısındadır.`;
-  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${esc(r.title)}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${esc(r.lifecycle==='excluded'?'ELENDİ · '+exclusionText(r):r.category)} · haritada göster</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
+  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${esc(readableTitle(r.title))}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${esc(r.lifecycle==='excluded'?'ELENDİ · '+exclusionText(r):r.category)} · haritada göster</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
 }
 
 $('mapSearch').oninput=render;
