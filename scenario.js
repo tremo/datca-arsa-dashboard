@@ -26,7 +26,7 @@ export function sanitizeScenario(input,meta={}){
   if(!type||!(type==='number'?NUMBER_OPERATORS:TEXT_OPERATORS).includes(operator))continue;
   const parsed=type==='number'?Number(raw.value):String(raw.value??'').trim().slice(0,80);
   if(type==='number'&&!Number.isFinite(parsed)||type==='text'&&!parsed)continue;
-  custom.push({id:String(raw.id||`${field}-${operator}-${custom.length}`).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,48),field,operator,value:parsed});
+  custom.push({id:String(raw.id||`${field}-${operator}-${custom.length}`).replace(/[^a-zA-Z0-9_-]/g,'').slice(0,48),field,operator,value:parsed,unknown:raw.unknown==='exclude'?'exclude':'include'});
  }
  return {version:1,gates,weights:{value,proximity},custom,onlyEligible:source.onlyEligible===true};
 }
@@ -47,22 +47,30 @@ export function relaxedGateKeys(record,state){
  return GATE_KEYS.filter(key=>state.gates[key]===false&&record.scenarioFacts?.[key]===true);
 }
 
-function fieldValue(record,field){return field==='area'?(record.officialArea??record.listingArea):record[field]}
-export function customRulePass(record,rule){
+// The discount rule uses the same comparison the cards show.
+export function fieldValue(record,field){return field==='area'?(record.officialArea??record.listingArea):field==='discountPct'?(record.comparison?record.comparison.discountPct:record.discountPct):record[field]}
+// true = fits, false = does not fit, null = the value is unknown.
+export function customRuleResult(record,rule){
  const value=fieldValue(record,rule.field),type=FIELD_TYPES[rule.field];
- if(value==null)return false;
+ if(value==null||value==='')return null;
  if(type==='text'){
   const left=String(value).trim().toLocaleLowerCase('tr'),right=String(rule.value).trim().toLocaleLowerCase('tr');
   return rule.operator==='eq'?left===right:left!==right;
  }
- const left=Number(value),right=Number(rule.value);if(!Number.isFinite(left)||!Number.isFinite(right))return false;
+ const left=Number(value),right=Number(rule.value);if(!Number.isFinite(left)||!Number.isFinite(right))return null;
  return {lte:left<=right,gte:left>=right,lt:left<right,gt:left>right,eq:left===right,neq:left!==right}[rule.operator]??false;
 }
+export function customRulePass(record,rule){return customRuleResult(record,rule)===true}
 
 export function scenarioEligibility(record,state){
- const failedGates=gateFailures(record,state),failedRules=state.custom.filter(rule=>!customRulePass(record,rule));
- const officialBlock=record.lifecycle==='excluded'&&!record.scenarioOfficialRelaxable;
- return {eligible:!officialBlock&&!failedGates.length&&!failedRules.length,failedGates,failedRules,officialBlock,relaxed:relaxedGateKeys(record,state)};
+ const failedGates=gateFailures(record,state),failedRules=[],unknownRules=[];
+ for(const rule of state.custom){const result=customRuleResult(record,rule);if(result===false||result===null&&rule.unknown==='exclude')failedRules.push(rule);else if(result===null)unknownRules.push(rule)}
+ const keys=record.scenarioOfficialGateKeys||[];
+ const officialBlock=record.lifecycle==='excluded'&&(!record.scenarioOfficialRelaxable||!keys.length||keys.some(key=>state.gates[key]));
+ const eligible=!officialBlock&&!failedGates.length&&!failedRules.length;
+ // status: out = not a candidate in this scenario, fail = candidate that breaks a rule, unknown = kept but a rule could not be checked.
+ const status=officialBlock?'out':!eligible?'fail':unknownRules.length?'unknown':'fit';
+ return {eligible,status,failedGates,failedRules,unknownRules,officialBlock,relaxed:relaxedGateKeys(record,state)};
 }
 
 export function scenarioVisible(record,state){
@@ -74,18 +82,23 @@ export function scenarioVisible(record,state){
  return !state.onlyEligible||result.eligible;
 }
 
+export const SCORE_RULES={missingValue:30,missingProximity:20,noComparableCap:49,min:20,max:99};
+export function sitPenalty(record){
+ if(Array.isArray(record.why)){const hit=record.why.map(String).find(line=>/sit: *-\d+ *puan/i.test(line));return hit?Number(hit.match(/-(\d+)\s*puan/)[1]):0}
+ const sit=String(record.sitStatus||'');return /^3\./i.test(sit)?10:/^2\./i.test(sit)?20:/sit var|tarih/i.test(sit)?25:0;
+}
+
 export function scenarioScore(record,state){
  if(state.weights.value===70&&state.weights.proximity===30)return Number(record.score);
  const total=state.weights.value+state.weights.proximity||1;
- const value=record.valueScore==null?30:Number(record.valueScore),proximity=record.proximityScore==null?20:Number(record.proximityScore);
+ const value=record.valueScore==null?SCORE_RULES.missingValue:Number(record.valueScore),proximity=record.proximityScore==null?SCORE_RULES.missingProximity:Number(record.proximityScore);
  const raw=(state.weights.value*value+state.weights.proximity*proximity)/total,low=Math.floor(raw),fraction=raw-low;
  // Python's presentation builder uses round-half-to-even.  Mirror it so the
  // untouched 70/30 scenario is exactly the immutable official score.
  let score=fraction===.5?(low%2===0?low:low+1):Math.round(raw);
- if(record.valueScore==null)score=Math.min(score,49);
- const sit=String(record.sitStatus||'');
- score-=(/^3\./i.test(sit)?10:/^2\./i.test(sit)?20:/sit var|tarih/i.test(sit)?25:0);
- return Math.max(20,Math.min(99,score));
+ if(record.valueScore==null)score=Math.min(score,SCORE_RULES.noComparableCap);
+ score-=sitPenalty(record);
+ return Math.max(SCORE_RULES.min,Math.min(SCORE_RULES.max,score));
 }
 
 export function scenarioParam(state,meta={}){return JSON.stringify(sanitizeScenario(state,meta))}
