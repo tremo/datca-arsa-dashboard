@@ -12,15 +12,15 @@
   <a class="skip" href="#mapSearch">Harita filtrelerine geç</a>
   <header class="topbar"><div class="container"><a class="brand" href="index.html">Datça <span>/ arsa araştırması</span></a><nav aria-label="Ana menü"><a href="index.html">İlanlar</a><a href="map.html" aria-current="page">Harita</a><button id="signOut" hidden>Çıkış</button></nav></div></header>
   <main class="container">
-    <section class="hero"><div class="eyebrow">03 / Konum</div><h1>Araziyi yerinde düşün.</h1><p>Kayıtlı parsel sınırları. Renkler araştırma durumunu gösterir; yol veya imar hakkı değildir.</p><div id="source" class="source">Özel araştırma · yalnızca yetkili hesap</div></section>
-    <section id="gate" class="gate" aria-live="polite"><h2 id="gateTitle">Parsellerine güvenli erişim.</h2><p id="authMessage">Harita yalnız yetkili Google hesabına açıktır.</p><button id="signIn" class="primary">Google ile giriş yap</button><button id="retry" hidden>Yeniden dene</button><p><small>WhatsApp’ta giriş açılmıyorsa bu adresi Safari / Chrome’da aç.</small></p></section>
+    <section class="hero"><h1>Parsel haritası</h1><p>Parsel sınırı kayıtlı ilanlar. Renk araştırma durumunu gösterir; yol ya da imar hakkı göstermez.</p><div id="source" class="source">Yalnız yetkili hesap</div></section>
+    <section id="gate" class="gate" aria-live="polite"><h2 id="gateTitle">Giriş gerekli</h2><p id="authMessage">Harita yalnız yetkili Google hesabına açık.</p><button id="signIn" class="primary">Google ile giriş yap</button><button id="retry" hidden>Yeniden dene</button><p><small>WhatsApp içinde giriş penceresi açılmazsa sağ üstteki menüden sayfayı Safari ya da Chrome’da aç.</small></p></section>
     <div id="workspace" hidden>
       <div class="search-row"><label>Parsel ara<input id="mapSearch" type="search" placeholder="Mahalle, ada/parsel, ilan no…"></label><label>Araştırma durumu<select id="mapStatus"><option value="">Tümü</option></select></label></div>
       <div class="results-bar"><p id="mapCount" role="status"></p><button id="clearMap">Filtreleri temizle</button></div>
       <div class="map-tools"><button id="fitMap">Sonuçlara odaklan</button><span class="map-legend" id="mapLegend" aria-label="Harita renkleri"></span></div>
       <div class="map-layout"><aside class="map-side" aria-label="Haritadaki ilanlar" id="mapResults"></aside><div id="map" class="map-canvas" aria-label="Datça parsel haritası; sağ üstten Uydu veya Harita katmanını seç"></div></div>
       <p class="explanation" id="mapNote"></p>
-      <footer class="page-footer">Sınırlar kayıtlı TKGM geometrisidir; aplikasyon ölçümü değildir. Uydu görünümü Esri World Imagery’dir; 18. yakınlaştırmadan sonra aynı görüntü büyütülerek gösterilir. Güncel ortofoto değildir. Google Maps bağlantısı seçili parsel merkezini uydu modunda açar; TKGM sınırı Google üzerine taşınmaz. Katman atıfları haritanın sağ altında gösterilir.</footer>
+      <footer class="page-footer">Sınırlar TKGM’de kayıtlı geometridir, yerinde ölçüm değildir. Uydu görüntüsü Esri’den gelir ve güncel olmayabilir; 18. yakınlaştırmadan sonra aynı görüntü büyütülür. Google bağlantısı parsel merkezini Google uydu görünümünde açar; parsel sınırı orada görünmez.</footer>
     </div>
   </main>
   <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>

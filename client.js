@@ -43,8 +43,8 @@ export function connect(onLoaded,onReset){
  // Signing out also drops the cached listings from this device.
  $('signOut').onclick=async()=>{try{await signOut(auth)}catch(e){message.textContent='Çıkış yapılamadı: '+e.code;return}writeStamp('');try{await terminate(db);await clearIndexedDbPersistence(db)}catch{}location.reload()};
  async function load(user){const token=++epoch;onReset();$('workspace').hidden=true;$('gate').hidden=false;$('signOut').hidden=!user;$('signIn').hidden=!!user;$('retry').hidden=true;message.className='';
- if(!user){$('gateTitle').textContent='Arsaların, tek bir yerde.';message.textContent='İlanlar ve kişisel notlar yalnız yetkili Google hesabına açıktır.';$('source').textContent='Özel araştırma · yalnızca yetkili hesap';return}
- $('gateTitle').textContent='Araştırman yükleniyor…';message.textContent='İlanlar, kanıtlar ve kişisel kararların hazırlanıyor.';
+ if(!user){$('gateTitle').textContent='Giriş gerekli';message.textContent='İlanlar ve notların yalnız yetkili Google hesabına açık.';$('source').textContent='Yalnız yetkili hesap';return}
+ $('gateTitle').textContent='Veriler yükleniyor…';message.textContent='İlanlar, kanıtlar ve kararların yükleniyor.';
  try{const m=await getDoc(doc(db,'meta','status'));if(!m.exists())throw Error('Kaynak özeti bulunamadı');const meta=decode(m.data());if(meta.schemaVersion!==2)throw Error('Yeni görünümün veri yayını henüz tamamlanmadı');
  const [l,f]=await Promise.all([loadListings(meta),getDocs(collection(db,'listingFeedback'))]);if(token!==epoch||!auth.currentUser)return;
  const records=l.docs.map(d=>decode(d.data()));
