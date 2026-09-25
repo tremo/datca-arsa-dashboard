@@ -81,6 +81,16 @@ small{font-size:12px}
 .stage summary{cursor:pointer;min-height:36px;padding:7px 0}
 .reason{padding:9px 0;border-top:1px solid var(--line)}
 .reason small{display:block;font-size:10px}
+.reason-row>summary{cursor:pointer;list-style:none}
+.reason-row>summary::-webkit-details-marker{display:none}
+.reason-row[open]>summary{font-weight:650}
+.reason-links{margin-top:8px}
+.reason-show{min-height:32px;padding:5px 9px;font-size:11px;font-weight:500;width:100%}
+.link-list{list-style:none;margin:8px 0 0;padding:0;max-height:260px;overflow:auto;display:grid;gap:6px}
+.link-list li{display:grid;grid-template-columns:minmax(0,1fr) auto;gap:2px 6px;align-items:center;padding:6px 0;border-top:1px solid var(--line)}
+.link-list a{font-weight:600;color:var(--green);overflow-wrap:anywhere}
+.link-list small{grid-column:1;font-size:10px;color:var(--muted)}
+.link-list .reason-detail{grid-column:2;grid-row:1/3;min-height:30px;padding:4px 8px;font-size:11px;font-weight:500}
 .stage>.muted{font-size:10px;margin-top:9px}
 .parallel{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin-top:16px}
 .check-card{padding:14px;border-radius:13px;border:1px solid var(--line);background:transparent;text-align:left;display:block;font-size:13px}
@@ -211,6 +221,7 @@ svg.parcel-diagram{display:block;width:100%;height:240px;background:var(--soft);
   .section-head h2{font-size:21px}
   .funnel{display:flex;overflow-x:auto;scroll-snap-type:x proximity;margin:0 -16px;padding:0 16px 8px;gap:9px}
   .stage{flex:0 0 218px;scroll-snap-align:start}
+  .stage:has(.reason-row[open]){flex-basis:min(340px,86vw)}
   .parallel{grid-template-columns:1fr 1fr;gap:8px}
   .filters{grid-template-columns:1fr 1fr;gap:12px}
   .search-row{grid-template-columns:1fr}
