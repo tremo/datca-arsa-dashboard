@@ -32,9 +32,9 @@ function render(){
     const group=addParcelEvidence(layer,decode(r.geometry),r.centroid,{popup,style:statusStyle(r)});
     shapes.set(String(r.id),group);
   }
-  $('mapCount').textContent=`${visible.length} / ${all.length} koordinatlı ilan`;
-  $('mapNote').textContent=`${total-all.length} ilanda parsel geometrisi yok; haritada gösterilmez. Uydu görüntüsü 18. yakınlaştırmadan sonra büyütülerek gösterilir. Yol ve komşu kanıtları ilan ayrıntısındadır.`;
-  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${esc(readableTitle(r.title))}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${statusBadge(r)}${r.lifecycle==='excluded'?' '+esc(exclusionText(r))+' ·':''} haritada göster</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
+  $('mapCount').textContent=`Haritada ${visible.length} / ${all.length} ilan`;
+  $('mapNote').textContent=`${total-all.length} ilanda parsel sınırı kayıtlı değil; bunlar haritada görünmez. Yol ve komşu kanıtları ilan detayında.`;
+  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${esc(readableTitle(r.title))}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${statusBadge(r)} ${r.lifecycle==='excluded'?esc(exclusionText(r))+' · ':''}haritada göster</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
 }
 
 $('mapSearch').oninput=render;
