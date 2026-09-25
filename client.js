@@ -11,9 +11,9 @@ export const money=v=>v==null?'Fiyat yok':new Intl.NumberFormat('tr-TR',{style:'
 export const date=v=>v&&!Number.isNaN(Date.parse(v))?new Date(v).toLocaleString('tr-TR',{dateStyle:'short',timeStyle:'short'}):'Zaman kaydı yok';
 export const safeUrl=v=>{try{const u=new URL(v);return u.protocol==='https:'?u.href:''}catch{return ''}};
 export const link=(url,label)=>safeUrl(url)?`<a class="button" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`:'';
-export const labels={official:'Resmî / bağımsız',statement:'Açık beyan',provisional:'Politika / provisional',pending:'Bekliyor',conflict:'Çelişkili'};
+export const labels={official:'Resmî kaynak',statement:'Satıcı / emlakçı beyanı',provisional:'Kendi kuralın / sit sınırında',pending:'Bekliyor',conflict:'Çelişkili'};
 export const kindLabels={natural_sit:'Doğal sit',archaeological_sit:'Arkeolojik sit',neighbor_access:'Kadastral yol',route:'Mertur rotası'};
-export const stageLabels={listingDetail:'İlan ayrıntısı',parcelIdentity:'Ada / parsel',officialParcel:'Resmî TKGM',verification:'Sit · yol · rota',finalReview:'Final inceleme',complete:'Final sonuçlandı',excluded:'Operasyonel eleme'};
+export const stageLabels={listingDetail:'İlan ayrıntısı',parcelIdentity:'Ada / parsel',officialParcel:'Tapu kaydı (TKGM)',verification:'Sit · yol · rota',finalReview:'Final inceleme',complete:'Final sonuçlandı',excluded:'Sistem eledi'};
 export const badge=(text,grade='')=>`<span class="badge ${esc(grade)}">${esc(text)}</span>`;
 export const area=r=>r.officialArea??r.listingArea;
 export const route=r=>{if(r.routeMax==null&&r.routeKmMax==null)return 'Ölçüm bekliyor';const range=(lo,hi,unit)=>hi==null?null:`${lo!=null&&lo!==hi?num(lo)+'–':''}${num(hi)} ${unit}`;return [range(r.routeMin,r.routeMax,'dk')||'Süre kaydı yok',range(r.routeKmMin,r.routeKmMax,'km')].filter(Boolean).join(' · ')||'Ölçüm bekliyor'};

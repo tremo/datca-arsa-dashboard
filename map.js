@@ -1,4 +1,5 @@
 import {$,esc,num,money,area,connect,decode} from './client.js';
+import {exclusionText} from './evidence.js';
 import {installBasemaps,addParcelEvidence,fitParcel,googleSatelliteHref,parcelStyle} from './basemaps.js';
 import {SCENARIO_STORAGE_KEY,defaultScenario,sanitizeScenario,scenarioFromUrl,scenarioVisible,scenarioIsDefault,scenarioParam} from './scenario.js';
 
@@ -27,13 +28,13 @@ function render(){
   for(const r of visible){
     const params=new URLSearchParams();if(!scenarioIsDefault(scenario,meta))params.set('scenario',scenarioParam(scenario,meta));
     const google=googleSatelliteHref(r.centroid);
-    const popup=`<strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><p>${money(r.price)} · ${num(area(r))} m²</p><p>${esc(r.lifecycle==='excluded'?'ELENDİ · '+(r.reason||'Operasyonel eleme'):r.category)}</p><a href="index.html${params.size?'?'+params:''}#ilan=${encodeURIComponent(r.id)}">Kanıtlar ve ilan detayı →</a>${google?`<br><a href="${esc(google)}" target="_blank" rel="noopener">Google Uydu’da aç ↗</a>`:''}`;
+    const popup=`<strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><p>${money(r.price)} · ${num(area(r))} m²</p><p>${esc(r.lifecycle==='excluded'?'ELENDİ · '+exclusionText(r):r.category)}</p><a href="index.html${params.size?'?'+params:''}#ilan=${encodeURIComponent(r.id)}">Kanıtlar ve ilan detayı →</a>${google?`<br><a href="${esc(google)}" target="_blank" rel="noopener">Google Uydu’da aç ↗</a>`:''}`;
     const group=addParcelEvidence(layer,decode(r.geometry),r.centroid,{popup,style:statusStyle(r)});
     shapes.set(String(r.id),group);
   }
   $('mapCount').textContent=`${visible.length} / ${all.length} koordinatlı ilan`;
-  $('mapNote').textContent=`${total-all.length} ilanda parsel geometrisi yok; haritada gösterilmez. Yüksek çözünürlüklü uydu görünümü Datça’da gerçek yararlı kaynak sınırı olan 18. düzeyde durur. Yol ve komşu kanıtları ilan ayrıntısındadır.`;
-  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${esc(r.title)}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${esc(r.lifecycle==='excluded'?'ELENDİ · '+(r.reason||'Operasyonel eleme'):r.category)} · haritada odaklan ↗</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
+  $('mapNote').textContent=`${total-all.length} ilanda parsel geometrisi yok; haritada gösterilmez. Uydu görüntüsü 18. yakınlaştırmadan sonra büyütülerek gösterilir. Yol ve komşu kanıtları ilan ayrıntısındadır.`;
+  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${esc(r.title)}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${esc(r.lifecycle==='excluded'?'ELENDİ · '+exclusionText(r):r.category)} · haritada göster</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
 }
 
 $('mapSearch').oninput=render;
