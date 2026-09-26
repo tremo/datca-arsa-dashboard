@@ -83,8 +83,10 @@ export function scenarioVisible(record,state){
 }
 
 export const SCORE_RULES={missingValue:30,missingProximity:20,noComparableCap:49,min:20,max:99};
-export function sitPenalty(record){
- if(Array.isArray(record.why)){const hit=record.why.map(String).find(line=>/sit: *-\d+ *puan/i.test(line));return hit?Number(hit.match(/-(\d+)\s*puan/)[1]):0}
+// Every penalty the pipeline records in `why` ("2. derece doğal sit: -30 puan", "Geçiş hakkı; …: -10 puan") is taken from there,
+// so the page follows the pipeline's own numbers.
+export function scorePenalty(record){
+ if(Array.isArray(record.why))return record.why.map(String).reduce((sum,line)=>{const m=line.match(/:\s*-\s*(\d+)\s*puan/i);return sum+(m?Number(m[1]):0)},0);
  const sit=String(record.sitStatus||'');return /^3\./i.test(sit)?10:/^2\./i.test(sit)?20:/sit var|tarih/i.test(sit)?25:0;
 }
 
@@ -97,7 +99,7 @@ export function scenarioScore(record,state){
  // untouched 70/30 scenario is exactly the immutable official score.
  let score=fraction===.5?(low%2===0?low:low+1):Math.round(raw);
  if(record.valueScore==null)score=Math.min(score,SCORE_RULES.noComparableCap);
- score-=sitPenalty(record);
+ score-=scorePenalty(record);
  return Math.max(SCORE_RULES.min,Math.min(SCORE_RULES.max,score));
 }
 

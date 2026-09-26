@@ -10,7 +10,7 @@ const ROLE={seller:'Satıcı',seller_or_agent:'İlan sahibi',seller_or_listing_c
 const RESULT={
  archaeological_sit:{no_archaeological_sit:'no',seller_states_no_archaeological_sit:'no',archaeological_sit_present_a1:'present',sit_present_type_unknown:'typeUnknown',first_degree_sit_type_unknown:'typeUnknown'},
  natural_sit:{no_natural_sit:'no',seller_states_no_natural_sit:'no',sit_present_type_unknown:'typeUnknown',first_degree_sit_type_unknown:'typeUnknown',natural_sit_not_addressed:'notAddressed'},
- neighbor_access:{direct_cadastral_frontage_screening_verified:'cadastral',cadastral_road_claimed:'cadastral',road_claimed:'road',direct_road_claimed:'road',road_frontage_claimed:'road',main_road_adjacent_claim:'road',direct_road_frontage_claim_without_cadastral_qualification:'road',dere_road_only_cadastral_status_unknown:'dere',no_direct_cadastral_road:'none',no_direct_road_frontage:'none',road_statement_unintelligible:'unclear',future_access_claim:'future'}
+ neighbor_access:{direct_cadastral_frontage_screening_verified:'cadastral',cadastral_road_claimed:'cadastral',road_claimed:'road',direct_road_claimed:'road',road_frontage_claimed:'road',main_road_adjacent_claim:'road',direct_road_frontage_claim_without_cadastral_qualification:'road',right_of_way_claimed:'rightOfWay',access_right_claimed:'rightOfWay',easement_right_claimed:'rightOfWay',dere_road_only_cadastral_status_unknown:'dere',no_direct_cadastral_road:'none',no_direct_road_frontage:'none',road_statement_unintelligible:'unclear',future_access_claim:'future'}
 };
 
 export const isEnglish=t=>!!t&&!/[çğıöşüÇĞİÖŞÜâîû]/.test(t)&&/\b(the|and|an|not|is|of|no|only|does|was|for|with|from|accepted|statement|verified|evidence|parcel|parcels|road|corridor|shares|strip)\b/i.test(t);
@@ -68,6 +68,7 @@ function roadModel(r){
  const kind='neighbor_access',raw=String(r.evidence?.yolKomşu||'missing'),result=resultOf(r,kind),m=cmeta(r,kind),note=String(r.roadProof?.note||''),src=source(r,kind);
  if(raw.startsWith('excluded')||result==='none')return model(r,'road','no','Kadastral yol: yok · eler',sourceLine(src),{badge:src.badge,tone:'conflict'});
  if(exclusionSays(r,'noRoad'))return model(r,'road','no','Kadastral yol: yok · eler','Eleme nedeninde yazıyor',{badge:'Eleme nedeni',tone:'conflict'});
+ if(r.rightOfWay?.present===true||result==='rightOfWay')return model(r,'road','penalty',`Geçiş hakkı: var · puan −${Number(r.rightOfWay?.scorePenalty)||10}`,join('Doğrudan kadastral yol cephesi değildir',sourceLine(src)||r.rightOfWay?.source),{badge:src.who||src.label?src.badge:'Beyan',tone:'provisional'});
  if(result==='cadastral')return model(r,'road','yes','Kadastral yol: var',sourceLine(src),{badge:src.badge,tone:src.tone});
  if(result==='road')return model(r,'road','yes','Yol cephesi: var',join(sourceLine(src),'kadastral olduğu ayrıca yazmıyor'),{badge:src.badge,tone:src.tone});
  if(result==='dere')return model(r,'road','yes','Kadastral yol: var sayıldı',join('Kendi kuralın: dere yolu',shortDate(src.at)),{badge:'Kendi kuralın',tone:'provisional'});
