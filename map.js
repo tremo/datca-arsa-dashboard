@@ -23,7 +23,7 @@ function statusStyle(r){
 function render(){
   if(!map)return;
   const q=$('mapSearch').value.trim().toLocaleLowerCase('tr'),status=$('mapStatus').value;
-  const visible=all.filter(r=>(!q||`${r.id} ${r.neighborhood} ${r.parcel} ${r.title}`.toLocaleLowerCase('tr').includes(q))&&(!status||statusKey(r)===status));
+  const visible=all.filter(r=>(!q||`${r.id} ${r.neighborhood} ${r.parcel} ${r.title}`.toLocaleLowerCase('tr').includes(q))&&(!status||statusKey(r)===status)).sort((a,b)=>Number(a.lifecycle==='excluded')-Number(b.lifecycle==='excluded')||(a.rank??Infinity)-(b.rank??Infinity));
   layer.clearLayers();shapes.clear();
   for(const r of visible){
     const params=new URLSearchParams();if(!scenarioIsDefault(scenario,meta))params.set('scenario',scenarioParam(scenario,meta));
