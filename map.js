@@ -1,4 +1,4 @@
-import {$,esc,num,money,area,readableTitle,connect,decode,STATUS,statusKey,statusBadge,swatch,listTier} from './client.js';
+import {$,esc,num,money,area,readableTitle,connect,decode,STATUS,statusKey,statusBadge,swatch,listTier,decisionMark} from './client.js';
 import {exclusionText} from './evidence.js';
 import {effectiveRecords} from './facts.js';
 import {installBasemaps,addParcelEvidence,fitParcel,googleSatelliteHref,parcelStyle} from './basemaps.js';
@@ -35,7 +35,7 @@ function render(){
   }
   $('mapCount').textContent=`Haritada ${visible.length} / ${all.length} ilan`;
   $('mapNote').textContent=`${total-all.length} ilanda parsel sınırı kayıtlı değil; bunlar haritada görünmez. Yol ve komşu kanıtları ilan detayında.`;
-  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${esc(readableTitle(r.title))}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${statusBadge(r)} ${r.lifecycle==='excluded'?esc(exclusionText(r))+' · ':''}haritada göster</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
+  $('mapResults').innerHTML=visible.length?visible.map(r=>`<button class="listing${r.lifecycle==='excluded'?' is-excluded':''}" data-id="${esc(r.id)}"><strong>${esc(r.neighborhood)} · ${esc(r.parcel)}</strong><h3>${decisionMark(feedback.get(String(r.id))?.decision)}${esc(readableTitle(r.title))}</h3><small>${money(r.price)} · ${num(area(r))} m²</small><p class="muted">${statusBadge(r)} ${r.lifecycle==='excluded'?esc(exclusionText(r))+' · ':''}haritada göster</p></button>`).join(''):'<div class="empty"><h3>Eşleşen parsel yok</h3><p>Filtreleri temizleyebilirsin.</p></div>';
 }
 
 $('mapSearch').oninput=render;
