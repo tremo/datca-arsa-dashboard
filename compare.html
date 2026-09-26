@@ -1,0 +1,24 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Datça · Karşılaştırma</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body class="compare-page">
+  <a class="skip" href="#compareTable">Karşılaştırmaya geç</a>
+  <header class="topbar"><div class="container"><a class="brand" href="index.html">Datça <span>/ arsa araştırması</span></a><nav aria-label="Ana menü"><a href="index.html">İlanlar</a><a href="map.html">Harita</a><a href="compare.html" aria-current="page">Karşılaştır</a><button id="signOut" hidden>Çıkış</button></nav></div></header>
+  <main class="container">
+    <section class="hero"><h1>Karşılaştır</h1><p>Kısa listen ve “Belki” dediklerin yan yana. Yeşil değer, o sütundaki en iyisi.</p><div id="source" class="source">Yalnız yetkili hesap</div></section>
+    <section id="gate" class="gate" aria-live="polite"><h2 id="gateTitle">Giriş gerekli</h2><p id="authMessage">Karşılaştırma yalnız yetkili Google hesabına açık.</p><button id="signIn" class="primary">Google ile giriş yap</button><button id="retry" hidden>Yeniden dene</button><p><small>WhatsApp içinde giriş penceresi açılmazsa sağ üstteki menüden sayfayı Safari ya da Chrome’da aç.</small></p></section>
+    <div id="workspace" hidden>
+      <div class="compare-bar"><div class="compare-chips" id="compareChips" role="group" aria-label="Gösterilen ilanlar"></div><p id="compareCount" role="status"></p></div>
+      <div class="compare-wrap" id="compareTable" tabindex="0" aria-label="Karşılaştırma tablosu; telefonda yana kaydır"></div>
+      <p class="explanation">Sütun adına dokununca o sütuna göre sıralanır; ikinci dokunuş sırayı çevirir. Değeri bilinmeyenler en sonda kalır. İlan adına dokununca kanıtlar ve detay açılır. Kararını ya da notunu ilan detayından değiştirebilirsin.</p>
+    </div>
+  </main>
+  <script type="module" src="compare.js"></script>
+</body>
+</html>
