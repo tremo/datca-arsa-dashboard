@@ -160,14 +160,4 @@ export function riskText(r){const {parts,hidden}=readable(r.reason);if(!parts.le
 export function exclusionText(r){const {parts,hidden}=readable(r.reason);if(parts.length)return tidy(parts).join(' · ')+(hidden?' · ayrıntı detayda':'');const topics=englishTopics(r.reason);if(topics.length)return topics.join(' · ')+' · ayrıntı detayda';return r.reason?'Eleme nedeni İngilizce ya da kod; ayrıntı detayda':'Eleme nedeni kayıtlı değil'}
 
 const NOTE_TR=[[/^Local official-geometry archive only/i,'Elde yalnız yerel arşivdeki sınır çizimi var; kadastral yol, fiziksel yol ya da yasal erişim bununla kanıtlanmaz.'],[/^Failed\/empty query is missing evidence/i,'TKGM sorgusu boş döndü; bu, numarasız yol koridoru olduğu anlamına gelmez.']];
-export function roadNoteText(r){const note=String(r.roadProof?.note||'').trim();if(!note)return '';const known=NOTE_TR.find(([re])=>re.test(note));if(known)return known[1];return isEnglish(note)?'Yol notu İngilizce; geliştirici bilgisinde.':note.replace(/^\?\s*/,'').replace(/\bverified_by_statement\b/g,'beyana dayalı').replace(/\bverified_by_user_policy\b/g,'kendi kuralınla').replace(/\bpending_official\b/g,'resmî teyit bekliyor').replace(/(\d)\s?m2\b/g,'$1 m²')}
-
-// B9: reason groups for eliminated listings. The pipeline's gate keys come first; without them the recorded reason is read.
-export const EXCLUSION_GROUPS=[['underMinimumArea','Alan 1.000 m² altı'],['overBudget','Fiyat 15 milyon TL üstü'],['noDirectAccess','Kadastral yola cephesi yok'],['naturalFirstDegree','1. derece doğal sit'],['archaeologicalSit','Arkeolojik sit'],['sharedTitle','Hisseli / paylı tapu'],['route','Mertur’a 45 dakikadan uzak'],['other','Diğer nedenler']];
-const GROUP_TEXT=[['sharedTitle',/hisse|paylı|müşterek|shared_title/],['archaeologicalSit',/arkeolojik|archaeolog/],['naturalFirstDegree',/(1\.|birinci) ?derece (doğal )?sit|doğal sit 1|1\.derece|first_degree/],['noDirectAccess',/kadastr\w* yol|doğrudan (kadastral |kadastro )?yol|yol cephe|yolu (yok|bulunma)|yol yok|yola (\d+|bir|üç) parsel|kadastro yoluna|res(mî|mi) yol|seçili yolu yok|cadastral|direct_cadastral|road_frontage/],['route',/45 dakika|45 dk|osrm|valhalla/],['underMinimumArea',/1\.000 m² altı|area_under|area_below/],['overBudget',/15 m tl|15 milyon|price_over/]];
-export function exclusionCategories(r){
- if(r.lifecycle!=='excluded')return [];
- const keys=new Set((r.scenarioOfficialGateKeys||[]).filter(k=>EXCLUSION_GROUPS.some(([g])=>g===k)));
- if(!keys.size){const text=`${r.reason||''} ${exclusionText(r)}`.toLocaleLowerCase('tr');for(const [key,re] of GROUP_TEXT)if(re.test(text))keys.add(key)}
- return keys.size?[...keys]:['other'];
-}
+export function roadNoteText(r){const note=String(r.roadProof?.note||'').trim();if(!note)return '';const known=NOTE_TR.find(([re])=>re.test(note));if(known)return known[1];return isEnglish(note)?'Yol notu İngilizce; geliştirici bilgisinde.':note.replace(/^\?\s*/,'')}
