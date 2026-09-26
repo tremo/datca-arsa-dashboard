@@ -92,9 +92,14 @@ export function scorePenalty(record){
 
 export function scenarioScore(record,state){
  if(state.weights.value===70&&state.weights.proximity===30)return Number(record.score);
- const total=state.weights.value+state.weights.proximity||1;
+ return formulaScore(record,state.weights);
+}
+
+// The pipeline's score formula; a correction that changes a penalty uses it to recompute the score.
+export function formulaScore(record,weights={value:70,proximity:30}){
+ const total=weights.value+weights.proximity||1;
  const value=record.valueScore==null?SCORE_RULES.missingValue:Number(record.valueScore),proximity=record.proximityScore==null?SCORE_RULES.missingProximity:Number(record.proximityScore);
- const raw=(state.weights.value*value+state.weights.proximity*proximity)/total,low=Math.floor(raw),fraction=raw-low;
+ const raw=(weights.value*value+weights.proximity*proximity)/total,low=Math.floor(raw),fraction=raw-low;
  // Python's presentation builder uses round-half-to-even.  Mirror it so the
  // untouched 70/30 scenario is exactly the immutable official score.
  let score=fraction===.5?(low%2===0?low:low+1):Math.round(raw);
