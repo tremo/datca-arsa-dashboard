@@ -1,6 +1,6 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import {getAuth,GoogleAuthProvider,onAuthStateChanged,signInWithPopup,signOut} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
-import {collection,doc,getDoc,getDocs,getDocsFromCache,getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,terminate,clearIndexedDbPersistence,query,where,setDoc,serverTimestamp} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+import {collection,doc,getDoc,getDocs,getDocsFromCache,getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,terminate,clearIndexedDbPersistence,query,where,setDoc,serverTimestamp,deleteField} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
 const firebaseConfig={projectId:'datca-arsa',appId:'1:978587692621:web:0cf933d39328b1138d7604',storageBucket:'datca-arsa.firebasestorage.app',apiKey:'AIzaSyClWwdWqDg4ABvgyqkUAkGypFVJ9HJxGgY',authDomain:'datca-arsa.firebaseapp.com',messagingSenderId:'978587692621'};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider();
 // E4: listings are kept in the browser's Firestore cache; they are read from the server again only when a new publish changes meta.generatedAt.
@@ -25,6 +25,8 @@ export const badge=(text,grade='')=>`<span class="badge ${esc(grade)}">${esc(tex
 export const STATUS={active:{label:'Araştırılıyor',color:'#00d7ef'},positive:{label:'Koşullu olumlu',color:'#ffd94a'},held:{label:'Final: olumlu değil',color:'#c38bff'},excluded:{label:'Elendi',color:'#ff5b55',dashed:true}};
 export const statusKey=r=>r.lifecycle==='excluded'?'excluded':r.recommended?'positive':r.reviewOutcome==='held'?'held':'active';
 export const swatch=key=>`<i class="swatch${STATUS[key].dashed?' is-dashed':''}" style="--swatch:${STATUS[key].color}" aria-hidden="true"></i>`;
+// List order: candidates, then final review not positive, then the ones the system eliminated; last the ones Mert eliminated ("İlgilenmiyorum" or a correction).
+export const listTier=(r,decision)=>decision==='excluded'||r.userExcluded?3:r.lifecycle==='excluded'?2:statusKey(r)==='held'?1:0;
 export const statusBadge=r=>{const key=statusKey(r);return `<span class="badge status-badge status-${key}">${swatch(key)}${esc(STATUS[key].label)}</span>`};
 export const area=r=>r.officialArea??r.listingArea;
 // B13: titles typed in capitals are shown in sentence case (place names keep their capital); the original stays in the detail.
@@ -54,6 +56,8 @@ export function connect(onLoaded,onReset){
  }catch(e){if(token!==epoch)return;$('gateTitle').textContent='Veriler yüklenemedi';message.className='auth-error';message.textContent=e.code==='permission-denied'?'Bu hesabın erişim yetkisi yok. Çıkış yapıp yetkili Google hesabıyla giriş yap.':(e.code||e.message);$('retry').hidden=false}}
  $('retry').onclick=()=>load(auth.currentUser);onAuthStateChanged(auth,load);
 }
+// Corrections live in the same feedback document; a correction set back to "sistemdeki gibi" is deleted from it.
+export async function saveFacts(id,changes,current={}){if(!auth.currentUser)throw Error('Oturum kapalı');const facts={},local={...(current.userFacts||{})};for(const [key,value] of Object.entries(changes)){if(value){facts[key]={...value,at:serverTimestamp()};local[key]={...value,at:new Date().toISOString()}}else{facts[key]=deleteField();delete local[key]}}const value={listingId:String(id),note:current.note||'',decision:current.decision||'',userFacts:facts,updatedBy:auth.currentUser.email,updatedAt:serverTimestamp()};await setDoc(doc(db,'listingFeedback',String(id)),value,{merge:true});return {...current,...value,userFacts:local,updatedAt:new Date()}}
 export async function saveFeedback(id,note,decision){if(!auth.currentUser)throw Error('Oturum kapalı');const value={listingId:String(id),note,decision,updatedBy:auth.currentUser.email,updatedAt:serverTimestamp()};await setDoc(doc(db,'listingFeedback',String(id)),value,{merge:true});return {...value,updatedAt:new Date()}}
 const assets=new Map();
 export function clearAssets(){assets.clear()}

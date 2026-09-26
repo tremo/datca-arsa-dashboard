@@ -118,11 +118,23 @@ function archaeologicalModel(r){
  return model(r,'archaeological','unknown','Arkeolojik sit: bilinmiyor','Karar belgesi ya da satıcı beyanı bekleniyor',{badge:'Bekliyor',tone:'pending'});
 }
 
-export function criterionModel(r,key){return key==='parcel'?parcelModel(r):key==='road'?roadModel(r):key==='natural'?naturalModel(r):archaeologicalModel(r)}
+// Mert's corrections (facts.js) come before the pipeline's evidence; what the pipeline found stays in the line below.
+const USER_STATE={road:{cadastral:['yes','Kadastral yol: var'],rightOfWay:['penalty','Geçiş hakkı: var · puan −{n}'],none:['no','Kadastral yol: yok · eler']},natural:{none:['yes','Doğal sit: yok'],3:['penalty','3. derece doğal sit: var · puan −{n}'],2:['penalty','2. derece doğal sit: var · puan −{n}'],1:['no','1. derece doğal sit: var · eler']},archaeological:{none:['yes','Arkeolojik sit: yok'],present:['no','Arkeolojik sit: var · eler']}};
+const PENALTY_LINE={road:/geçiş hakkı[^:]*:\s*-\s*(\d+)/i,natural:/doğal sit\s*:\s*-\s*(\d+)/i};
+const BASIS_TEXT={site:'yerinde gördün',seller:'satıcı söyledi',official:'resmî belgede',map:'haritadan baktın'};
+function userModel(r,key){
+ const base=r.published;if(!base)return null;
+ if(key==='parcel'){const p=r.userFacts?.parcelId;if(!p)return null;const sys=parcelModel(base),id=`${p.ada}/${p.parsel}`,known=base.parcel&&base.parcel!=='—';if(known&&String(base.parcel).trim()===id)return {...sys,sub:join(sys.sub,'senin girdiğinle aynı')};return {...model(base,'parcel','unknown',`Ada/parsel: ${id} · senin girdiğin`,join(BASIS_TEXT[p.basis],shortDate(p.at),known?`sistemde: ${base.parcel}`:'TKGM sorgusu bekleniyor'),{badge:'Senin düzeltmen',tone:'user'}),user:true,was:sys.text}}
+ const f=r.userFacts?.[key],[state,text]=USER_STATE[key]?.[f?.value]||[];if(!state)return null;
+ const n=(r.why||[]).map(w=>String(w).match(PENALTY_LINE[key]||/$^/)?.[1]).find(Boolean)||'',was=criterionModel(base,key).text;
+ return {...model(base,key,state,text.replace('{n}',n||(key==='road'?'10':'30')),join('Senin düzeltmen',BASIS_TEXT[f.basis],shortDate(f.at),`sistemde: ${was}`),{badge:'Senin düzeltmen',tone:'user'}),user:true,was};
+}
+
+export function criterionModel(r,key){return userModel(r,key)||(key==='parcel'?parcelModel(r):key==='road'?roadModel(r):key==='natural'?naturalModel(r):archaeologicalModel(r))}
 
 // Card-level colour for the doğal sit rule: orange for a 2./3. derece penalty,
 // dashed orange when the sit type is unknown or the parcel sits on a 1. derece boundary.
-export function sitTone(r){const n=naturalModel(r).state;if(n==='penalty')return 'penalty';return n==='uncertain'||n==='edge'||archaeologicalModel(r).state==='uncertain'?'uncertain':''}
+export function sitTone(r){const n=criterionModel(r,'natural').state;if(n==='penalty')return 'penalty';return n==='uncertain'||n==='edge'||criterionModel(r,'archaeological').state==='uncertain'?'uncertain':''}
 
 // Badge text per check; the same grade means different things per criterion.
 export function gradeLabel(kind,grade){if(grade==='provisional')return kind==='natural_sit'?'Sınırda · kontrol et':'Kendi kuralın';return {official:'Resmî kaynak',statement:'Satıcı / emlakçı beyanı',pending:'Bekliyor',conflict:'Çelişkili'}[grade]||grade}

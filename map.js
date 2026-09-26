@@ -1,9 +1,10 @@
-import {$,esc,num,money,area,readableTitle,connect,decode,STATUS,statusKey,statusBadge,swatch} from './client.js';
+import {$,esc,num,money,area,readableTitle,connect,decode,STATUS,statusKey,statusBadge,swatch,listTier} from './client.js';
 import {exclusionText} from './evidence.js';
+import {effectiveRecords} from './facts.js';
 import {installBasemaps,addParcelEvidence,fitParcel,googleSatelliteHref,parcelStyle} from './basemaps.js';
 import {SCENARIO_STORAGE_KEY,defaultScenario,sanitizeScenario,scenarioFromUrl,scenarioVisible,scenarioIsDefault,scenarioParam} from './scenario.js';
 
-let all=[],total=0,map=null,layer=null,shapes=new Map(),scenario=null,meta=null;
+let all=[],total=0,map=null,layer=null,shapes=new Map(),scenario=null,meta=null,feedback=new Map();
 
 function init(){
   if(map)return;
@@ -23,7 +24,7 @@ function statusStyle(r){
 function render(){
   if(!map)return;
   const q=$('mapSearch').value.trim().toLocaleLowerCase('tr'),status=$('mapStatus').value;
-  const visible=all.filter(r=>(!q||`${r.id} ${r.neighborhood} ${r.parcel} ${r.title}`.toLocaleLowerCase('tr').includes(q))&&(!status||statusKey(r)===status)).sort((a,b)=>Number(a.lifecycle==='excluded')-Number(b.lifecycle==='excluded')||(a.rank??Infinity)-(b.rank??Infinity));
+  const visible=all.filter(r=>(!q||`${r.id} ${r.neighborhood} ${r.parcel} ${r.title}`.toLocaleLowerCase('tr').includes(q))&&(!status||statusKey(r)===status)).sort((a,b)=>listTier(a,feedback.get(String(a.id))?.decision)-listTier(b,feedback.get(String(b.id))?.decision)||(a.rank??Infinity)-(b.rank??Infinity));
   layer.clearLayers();shapes.clear();
   for(const r of visible){
     const params=new URLSearchParams();if(!scenarioIsDefault(scenario,meta))params.set('scenario',scenarioParam(scenario,meta));
@@ -46,8 +47,9 @@ $('fitMap').onclick=fit;
 $('clearMap').onclick=()=>{$('mapSearch').value='';$('mapStatus').value='';render();fit()};
 $('mapResults').onclick=e=>{const b=e.target.closest('[data-id]'),s=shapes.get(b?.dataset.id);if(s){fitParcel(map,s,18);s.openPopup();$('map').scrollIntoView({block:'center',behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth'})}};
 
-connect(({meta:m,records})=>{
-  meta=m;const fromUrl=scenarioFromUrl(meta);if(fromUrl)scenario=fromUrl;else{try{scenario=sanitizeScenario(JSON.parse(localStorage.getItem(SCENARIO_STORAGE_KEY)||'null'),meta)}catch{scenario=defaultScenario(meta)}}
-  const catalog=records.filter(r=>scenarioVisible(r,scenario));all=catalog.filter(r=>r.geometry&&r.centroid);total=catalog.length;init();render();
+connect(({meta:m,records,feedback:f})=>{
+  meta=m;feedback=f;const fromUrl=scenarioFromUrl(meta);if(fromUrl)scenario=fromUrl;else{try{scenario=sanitizeScenario(JSON.parse(localStorage.getItem(SCENARIO_STORAGE_KEY)||'null'),meta)}catch{scenario=defaultScenario(meta)}}
+  // Mert's corrections apply here too, so an eliminated or reopened listing shows the same status as in the list.
+  const catalog=effectiveRecords(records,feedback).filter(r=>scenarioVisible(r,scenario));all=catalog.filter(r=>r.geometry&&r.centroid);total=catalog.length;init();render();
   requestAnimationFrame(()=>{map.invalidateSize();const id=new URLSearchParams(location.search).get('id'),s=shapes.get(id);if(s){fitParcel(map,s,18);s.openPopup()}else fit()});
 },()=>{all=[];shapes.clear();layer?.clearLayers();$('mapResults').replaceChildren()});
