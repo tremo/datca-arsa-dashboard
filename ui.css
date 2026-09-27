@@ -750,4 +750,25 @@ table.compare{border-collapse:separate;border-spacing:0;width:max-content;min-wi
   .compare th[scope=row]{min-width:160px;max-width:180px}
   .compare th,.compare td{padding:9px 10px}
 }
+/* The listing looked at last: an amber ring on the card or row, a short pulse when coming back. */
+.last-tag{display:inline-block;padding:2px 7px;border-radius:999px;background:#fbefd0;color:#7a5200;font-size:10px;font-weight:700}
+.listing.is-last-viewed{outline:2px solid #d9a43a;outline-offset:3px}
+.listing.flash,.compare tr.flash>*{animation:last-viewed 1.5s ease-out}
+@keyframes last-viewed{0%{box-shadow:0 0 0 6px #f0b42966}100%{box-shadow:0 0 0 0 #f0b42900}}
+@media(prefers-reduced-motion:reduce){.listing.flash,.compare tr.flash>*{animation:none}}
+.compare tr.is-last-viewed>*{background:#fff8e6}
+.compare th[scope=row] .last-tag{margin-top:5px}
+/* Mert's order: rank and drag handle in the title column. */
+.cmp-row-head{display:flex;gap:8px;align-items:flex-start}
+.cmp-row-body{min-width:0}
+.cmp-order{display:grid;justify-items:center;gap:2px;flex:none;width:30px}
+.cmp-order b{font-size:15px;font-variant-numeric:tabular-nums;color:var(--ink)}
+.cmp-handle{min-height:36px;width:30px;padding:0;border:1px dashed #bfcbbf;border-radius:8px;background:none;color:var(--muted);font-size:16px;cursor:grab;touch-action:none}
+.cmp-handle:hover{border-color:var(--green);color:var(--green);background:none}
+.cmp-handle:focus-visible{outline:2px solid var(--green);outline-offset:2px}
+.compare tr.is-dragging>*{background:#eef4ea}
+.compare tr.is-dragging .cmp-handle{cursor:grabbing;border-style:solid;border-color:var(--green)}
+.compare thead th .cmp-own{font-size:11px}
+.compare thead th .cmp-own.is-on{color:var(--green)}
+.compare thead th .cmp-own.is-on::after{content:" ✓"}
 

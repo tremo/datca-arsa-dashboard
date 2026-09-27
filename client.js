@@ -76,6 +76,13 @@ export async function saveFacts(id,changes,current={}){if(!auth.currentUser)thro
 const isoOf=v=>typeof v?.toDate==='function'?v.toDate().toISOString():v instanceof Date?v.toISOString():typeof v==='string'?v:'';
 export const questionsOf=f=>Object.entries(f?.questions||{}).map(([id,q])=>({id,text:String(q?.text||'').trim(),askedAt:isoOf(q?.askedAt),answer:String(q?.answer||'').trim(),answeredAt:isoOf(q?.answeredAt)})).filter(q=>q.text).sort((a,b)=>a.askedAt.localeCompare(b.askedAt)||a.id.localeCompare(b.id));
 export async function saveQuestion(id,text,current={}){if(!auth.currentUser)throw Error('Oturum kapalı');const qid=`q${Date.now().toString(36)}${Math.random().toString(36).slice(2,6)}`,by=auth.currentUser.email,value={listingId:String(id),questions:{[qid]:{text,askedAt:serverTimestamp(),askedBy:by}},updatedBy:by,updatedAt:serverTimestamp()};await setDoc(doc(db,'listingFeedback',String(id)),value,{merge:true});return {...current,...value,questions:{...(current.questions||{}),[qid]:{text,askedAt:new Date().toISOString(),askedBy:by}},updatedAt:new Date()}}
+// Small per-user settings in userState/{name}, such as the comparison order. A refused read returns null.
+export async function loadUserState(name){try{const d=await getDoc(doc(db,'userState',name));return d.exists()?d.data():null}catch{return null}}
+export async function saveUserState(name,data){if(!auth.currentUser)return;await setDoc(doc(db,'userState',name),{...data,updatedBy:auth.currentUser.email,updatedAt:serverTimestamp()},{merge:true})}
+// The listing whose detail was opened last in this tab; the list and the comparison highlight it.
+export const LAST_VIEWED='datca-last-viewed';
+export const lastViewed=()=>{try{return sessionStorage.getItem(LAST_VIEWED)||''}catch{return ''}};
+export const rememberViewed=id=>{try{sessionStorage.setItem(LAST_VIEWED,String(id))}catch{}};
 // Looked-at snapshots (seen.js), one map entry per listing.
 export async function saveSeen(entries){if(!auth.currentUser||!entries.length)return;await setDoc(doc(db,'userState','seen'),{items:Object.fromEntries(entries.map(([id,v])=>[String(id),{v,at:serverTimestamp()}])),updatedBy:auth.currentUser.email},{merge:true})}
 // One listing's feedback read again, so answers written since the page opened show up.
