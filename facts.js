@@ -18,13 +18,23 @@ const penaltyIn=(why,re)=>Number(why.map(w=>w.match(re)?.[1]).find(Boolean))||0;
 
 const when=v=>typeof v?.toDate==='function'?v.toDate().toISOString():v instanceof Date?v.toISOString():typeof v==='string'?v:'';
 const basisOf=v=>BASIS.some(([key])=>key===v)?v:'';
+const noteOf=v=>typeof v==='string'?v.trim().slice(0,500):'';
 // Only known keys and values are used; anything else in the document is ignored.
 export function sanitizeFacts(raw){
  const out={};if(!raw||typeof raw!=='object')return out;
- for(const [key,def] of Object.entries(FACTS)){const f=raw[key],value=String(f?.value??'');if(def.options.some(([v])=>v===value))out[key]={value,basis:basisOf(f.basis),at:when(f.at)}}
+ for(const [key,def] of Object.entries(FACTS)){const f=raw[key],value=String(f?.value??'');if(def.options.some(([v])=>v===value))out[key]={value,basis:basisOf(f.basis),note:noteOf(f.note),at:when(f.at)}}
  const p=raw.parcelId,ada=String(p?.ada??'').trim(),parsel=String(p?.parsel??'').trim();
- if(/^\d{1,6}$/.test(ada)&&/^\d{1,6}$/.test(parsel))out.parcelId={ada,parsel,basis:basisOf(p.basis),at:when(p.at)};
+ if(/^\d{1,6}$/.test(ada)&&/^\d{1,6}$/.test(parsel))out.parcelId={ada,parsel,basis:basisOf(p.basis),note:noteOf(p.note),at:when(p.at)};
  return out;
+}
+
+// A listing under a 2. or 3. derece doğal sit loses 30 points. The pipeline writes that into `why` and into the score; if an
+// older publish left it out, the penalty is applied here and the record says so, so such a listing never shows a clean score.
+const SIT_PENALTY_LINE=/doğal sit\s*:\s*-\s*\d+/i,SIT_DEGREE=/^[23]\. derece doğal sit/i;
+export function withSitPenalty(r){
+ if(r.lifecycle==='excluded'||!SIT_DEGREE.test(String(r.sitStatus||''))||!Array.isArray(r.why)||!Number.isFinite(Number(r.score)))return r;
+ if(r.why.some(w=>SIT_PENALTY_LINE.test(String(w))))return r;
+ return {...r,score:Math.max(0,Number(r.score)-SIT_PENALTY),scoreAdjusted:SIT_PENALTY,why:[`${r.sitStatus}: -${SIT_PENALTY} puan`,...r.why].slice(0,3)};
 }
 
 // The record as the panel shows it: gates, penalties, score and status follow the corrections.
@@ -65,7 +75,7 @@ export function applyFacts(r,raw){
 // correction that changes a score or brings a listing back moves it to its place.
 export function effectiveRecords(records,feedback){
  let changed=false;
- const out=records.map(r=>{const e=applyFacts(r,feedback.get(String(r.id))?.userFacts);if(e!==r)changed=true;return e});
+ const out=records.map(r=>{const base=withSitPenalty(r),e=applyFacts(base,feedback.get(String(r.id))?.userFacts);if(e!==r)changed=true;return e});
  if(!changed)return out;
  const order=out.map((r,i)=>[r,i]).filter(([r])=>r.lifecycle!=='excluded').sort(([a],[b])=>(Number(b.score)||0)-(Number(a.score)||0)||(a.rank??Infinity)-(b.rank??Infinity));
  order.forEach(([r,i],n)=>{if(r.rank!==n+1)out[i]={...r,rank:n+1}});
