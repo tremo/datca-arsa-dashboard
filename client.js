@@ -57,15 +57,20 @@ export function connect(onLoaded,onReset){
  $('signIn').onclick=async()=>{message.className='';message.textContent='Google giriş penceresi açılıyor…';try{await signInWithPopup(auth,provider)}catch(e){message.className='auth-error';message.textContent=e.code==='auth/popup-blocked'?'Giriş penceresi engellendi. Bu adresi Safari / Chrome’da açıp yeniden dene.':e.code==='auth/popup-closed-by-user'?'Giriş tamamlanmadı. Hazır olduğunda yeniden deneyebilirsin.':'Giriş tamamlanamadı: '+e.code}};
  // Signing out also drops the cached listings from this device.
  $('signOut').onclick=async()=>{try{await signOut(auth)}catch(e){message.textContent='Çıkış yapılamadı: '+e.code;return}writeStamp('');try{await terminate(db);await clearIndexedDbPersistence(db)}catch{}location.reload()};
+ // Verda's own results arrive in a separate collection and are laid over the listing record: the action taken for each unknown, how far the
+ // conversation has come and the dates. Without access (rules not opened yet) or without data the page shows the older record unchanged.
+ async function loadV2(){try{const [m,l]=await Promise.all([getDoc(doc(db,'meta','v2')),getDocs(collection(db,'v2Listings'))]);if(!m.exists())return null;return{meta:decode(m.data()),docs:new Map(l.docs.map(d=>[d.id,decode(d.data())]))}}catch{return null}}
+ function applyV2(records,v2){if(!v2)return;for(const r of records){const d=v2.docs.get(String(r.id));if(!d)continue;r.v2=d;if(Array.isArray(d.actions)&&d.actions.length)r.actions=d.actions;if(d.contact)r.contact=d.contact;if(!r.listedAt&&d.publishedAt)r.listedAt=d.publishedAt;if(!r.firstSeenAt&&d.discoveredAt)r.firstSeenAt=d.discoveredAt}}
  async function load(user){const token=++epoch;onReset();$('workspace').hidden=true;$('gate').hidden=false;$('signOut').hidden=!user;$('signIn').hidden=!!user;$('retry').hidden=true;message.className='';
  if(!user){$('gateTitle').textContent='Giriş gerekli';message.textContent='İlanlar ve notların yalnız yetkili Google hesabına açık.';$('source').textContent='Yalnız yetkili hesap';return}
  $('gateTitle').textContent='Veriler yükleniyor…';message.textContent='İlanlar, kanıtlar ve kararların yükleniyor.';
  try{const m=await getDoc(doc(db,'meta','status'));if(!m.exists())throw Error('Kaynak özeti bulunamadı');const meta=decode(m.data());if(meta.schemaVersion!==2)throw Error('Yeni görünümün veri yayını henüz tamamlanmadı');
  const [l,f,seen]=await Promise.all([loadListings(meta),getDocs(collection(db,'listingFeedback')),getDoc(doc(db,'userState','seen')).then(d=>d.exists()&&d.data().items||{}).catch(()=>({}))]);if(token!==epoch||!auth.currentUser)return;
  const records=l.docs.map(d=>decode(d.data()));
+ const v2=await loadV2();applyV2(records,v2);
  // E7: a publish in progress no longer locks the app; the page opens with a warning instead.
  document.querySelector('.stale-banner')?.remove();if(records.length!==meta.recordCount){writeStamp('');const warn=document.createElement('p');warn.className='stale-banner';warn.setAttribute('role','status');warn.textContent=`Veri yayını sürüyor olabilir: ${meta.recordCount} ilan beklenirken ${records.length} ilan geldi. Birkaç dakika sonra sayfayı yenile.`;$('workspace').prepend(warn)}
- await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}`;$('gate').hidden=true;$('workspace').hidden=false;
+ await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}${v2?` · Verda ${date(v2.meta.generatedAt)}`:''}`;$('gate').hidden=true;$('workspace').hidden=false;
  }catch(e){if(token!==epoch)return;$('gateTitle').textContent='Veriler yüklenemedi';message.className='auth-error';message.textContent=e.code==='permission-denied'?'Bu hesabın erişim yetkisi yok. Çıkış yapıp yetkili Google hesabıyla giriş yap.':(e.code||e.message);$('retry').hidden=false}}
  $('retry').onclick=()=>load(auth.currentUser);onAuthStateChanged(auth,load);
 }
