@@ -60,7 +60,17 @@ export function connect(onLoaded,onReset){
  // Verda's own results arrive in a separate collection and are laid over the listing record: the action taken for each unknown, how far the
  // conversation has come and the dates. Without access (rules not opened yet) or without data the page shows the older record unchanged.
  async function loadV2(){try{const [m,l]=await Promise.all([getDoc(doc(db,'meta','v2')),getDocs(collection(db,'v2Listings'))]);if(!m.exists())return null;return{meta:decode(m.data()),docs:new Map(l.docs.map(d=>[d.id,decode(d.data())]))}}catch{return null}}
- function applyV2(records,v2){if(!v2)return;for(const r of records){const d=v2.docs.get(String(r.id));if(!d)continue;r.v2=d;if(Array.isArray(d.actions)&&d.actions.length)r.actions=d.actions;if(d.contact)r.contact=d.contact;if(!r.listedAt&&d.publishedAt)r.listedAt=d.publishedAt;if(!r.firstSeenAt&&d.discoveredAt)r.firstSeenAt=d.discoveredAt}}
+ // What Verda has found out since the older record was made: the parcel number from the listing, the official TKGM record (area, type) and the
+ // sellers' statements about sit. A newer fact fills in a field the older record leaves empty or unverified; it never removes anything.
+ function applyFacts(r,f){if(!f)return;const v=k=>f[k]?.value,official=k=>f[k]?.grade==='resmi'&&v(k)!=null;r.evidence={...(r.evidence||{})};
+  if(v('parcel_key')&&(!r.parcel||r.parcel==='—'))r.parcel=String(v('parcel_key'));
+  if(v('parcel_key')&&r.evidence.parselKimliği!=='verified')r.evidence.parselKimliği='verified';
+  if(official('parcel_key')&&official('sale_area_m2')&&r.evidence.resmîParsel!=='verified')r.evidence.resmîParsel='verified';
+  if(official('sale_area_m2')&&!r.officialArea)r.officialArea=v('sale_area_m2');
+  if(official('property_type')&&(!r.officialType||r.officialType==='—'))r.officialType=String(v('property_type'));
+  if(f.natural_sit?.grade==='beyan'&&v('natural_sit')==='none'&&!/^verified/.test(String(r.evidence.doğalSit||'')))r.evidence.doğalSit='verified_by_statement';
+  if(f.archaeological_sit?.grade==='beyan'&&v('archaeological_sit')===false&&!/^verified/.test(String(r.evidence.arkeolojikSit||'')))r.evidence.arkeolojikSit='verified_by_statement'}
+ function applyV2(records,v2){if(!v2)return;for(const r of records){const d=v2.docs.get(String(r.id));if(!d)continue;r.v2=d;if(Array.isArray(d.actions)&&d.actions.length)r.actions=d.actions;applyFacts(r,d.facts);if(Array.isArray(d.thread)&&d.thread.length)r.thread=d.thread;if(d.contact)r.contact=d.contact;if(!r.listedAt&&d.publishedAt)r.listedAt=d.publishedAt;if(!r.firstSeenAt&&d.discoveredAt)r.firstSeenAt=d.discoveredAt}}
  async function load(user){const token=++epoch;onReset();$('workspace').hidden=true;$('gate').hidden=false;$('signOut').hidden=!user;$('signIn').hidden=!!user;$('retry').hidden=true;message.className='';
  if(!user){$('gateTitle').textContent='Giriş gerekli';message.textContent='İlanlar ve notların yalnız yetkili Google hesabına açık.';$('source').textContent='Yalnız yetkili hesap';return}
  $('gateTitle').textContent='Veriler yükleniyor…';message.textContent='İlanlar, kanıtlar ve kararların yükleniyor.';
