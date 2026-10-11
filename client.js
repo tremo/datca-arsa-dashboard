@@ -53,7 +53,7 @@ export const route=r=>{if(r.routeMax==null&&r.routeKmMax==null)return 'Ölçüm 
 export function decode(v){if(Array.isArray(v))return v.map(x=>decode(x?.items??x));if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,decode(x)]));return v}
 let epoch=0;
 export async function loadV2Status(){try{const d=await getDoc(doc(db,'meta','v2status'));return d.exists()?decode(d.data()):null}catch{return null}}
-export function connect(onLoaded,onReset){
+export function connect(onLoaded,onReset,onOverlay){
  const message=$('authMessage');
  $('signIn').onclick=async()=>{message.className='';message.textContent='Google giriş penceresi açılıyor…';try{await signInWithPopup(auth,provider)}catch(e){message.className='auth-error';message.textContent=e.code==='auth/popup-blocked'?'Giriş penceresi engellendi. Bu adresi Safari / Chrome’da açıp yeniden dene.':e.code==='auth/popup-closed-by-user'?'Giriş tamamlanmadı. Hazır olduğunda yeniden deneyebilirsin.':'Giriş tamamlanamadı: '+e.code}};
  // Signing out also drops the cached listings from this device.
@@ -76,12 +76,12 @@ export function connect(onLoaded,onReset){
  if(!user){$('gateTitle').textContent='Giriş gerekli';message.textContent='İlanlar ve notların yalnız yetkili Google hesabına açık.';$('source').textContent='Yalnız yetkili hesap';return}
  $('gateTitle').textContent='Veriler yükleniyor…';message.textContent='İlanlar, kanıtlar ve kararların yükleniyor.';
  try{const m=await getDoc(doc(db,'meta','status'));if(!m.exists())throw Error('Kaynak özeti bulunamadı');const meta=decode(m.data());if(meta.schemaVersion!==2)throw Error('Yeni görünümün veri yayını henüz tamamlanmadı');
+ const overlayLoad=loadV2();       // started with the rest, but the page does not wait for it
  const [l,f,seen]=await Promise.all([loadListings(meta),getDocs(collection(db,'listingFeedback')),getDoc(doc(db,'userState','seen')).then(d=>d.exists()&&d.data().items||{}).catch(()=>({}))]);if(token!==epoch||!auth.currentUser)return;
  const records=l.docs.map(d=>decode(d.data()));
- const v2=await loadV2();applyV2(records,v2);
  // E7: a publish in progress no longer locks the app; the page opens with a warning instead.
  document.querySelector('.stale-banner')?.remove();if(records.length!==meta.recordCount){writeStamp('');const warn=document.createElement('p');warn.className='stale-banner';warn.setAttribute('role','status');warn.textContent=`Veri yayını sürüyor olabilir: ${meta.recordCount} ilan beklenirken ${records.length} ilan geldi. Birkaç dakika sonra sayfayı yenile.`;$('workspace').prepend(warn)}
- await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}${v2?` · Verda ${date(v2.meta.generatedAt)}`:''}`;$('gate').hidden=true;$('workspace').hidden=false;
+ await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}`;$('gate').hidden=true;$('workspace').hidden=false;overlayLoad.then(v2=>{if(!v2||token!==epoch||!auth.currentUser)return;applyV2(records,v2);$('source').textContent+=` · Verda ${date(v2.meta.generatedAt)}`;onOverlay?.(v2)});
  }catch(e){if(token!==epoch)return;$('gateTitle').textContent='Veriler yüklenemedi';message.className='auth-error';message.textContent=e.code==='permission-denied'?'Bu hesabın erişim yetkisi yok. Çıkış yapıp yetkili Google hesabıyla giriş yap.':(e.code||e.message);$('retry').hidden=false}}
  $('retry').onclick=()=>load(auth.currentUser);onAuthStateChanged(auth,load);
 }
