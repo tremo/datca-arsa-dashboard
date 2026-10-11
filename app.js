@@ -195,6 +195,14 @@ const reopenedText=r=>`Sistem “${r.userCleared.map(reasonLabel).join(', ')}”
 const photosOf=r=>Array.isArray(r?.v2?.photos)?r.v2.photos.filter(x=>typeof x==='string'):[];
 // One small photo in the list; the full set opens in the viewer. The image itself is fetched only when the card scrolls into view.
 const thumb=r=>{const p=photosOf(r);return p.length?`<button type="button" class="rc-thumb" data-gallery="${esc(r.id)}" data-photo-asset="${esc(p[0])}" data-count="${p.length}" aria-label="${p.length} fotoğrafı aç"></button>`:''};
+// Proposals Verda read from a seller's words but could not record by itself. Each can be accepted here; it is then saved as the owner's own correction.
+const PROPOSAL={natural_sit:{key:'natural',label:'Doğal sit',map:{none:['none','Doğal sit yok'],first_degree:['1','1. derece doğal sit'],second_degree:['2','2. derece doğal sit'],third_degree:['3','3. derece doğal sit']},bool:{false:'none'}},
+ archaeological_sit:{key:'archaeological',label:'Arkeolojik sit',map:{},bool:{false:['none','Arkeolojik sit yok'],true:['present','Arkeolojik sit var']}},
+ access:{key:'road',label:'Kadastral yol',map:{direct:['cadastral','Kadastral yola cephesi var'],existing_easement:['rightOfWay','Geçiş hakkıyla giriliyor'],none:['none','Kadastral yolu yok']},bool:{}},
+ shared_title:{key:'sharedTitle',label:'Hisseli tapu',map:{},bool:{false:['no','Hisseli değil'],true:['yes','Hisseli tapu']}}};
+const proposalChoice=p=>{const d=PROPOSAL[p.field];if(!d)return null;const raw=p.value;if(typeof raw==='boolean'){const hit=d.bool[String(raw)];return hit?(Array.isArray(hit)?{key:d.key,value:hit[0],text:hit[1],label:d.label}:{key:d.key,value:hit,text:d.map[hit]?.[1]||String(hit),label:d.label}):null}const hit=d.map[String(raw)];return hit?{key:d.key,value:hit[0],text:hit[1],label:d.label}:null};
+const proposalsHtml=r=>{const items=(Array.isArray(r.proposals)?r.proposals:[]).map(p=>({p,c:proposalChoice(p)})).filter(x=>x.c&&!r.userFacts?.[x.c.key]);
+ return items.length?`<div class="proposals"><h4>Verda’nın önerileri</h4><ul>${items.map(({p,c})=>`<li><div><b>${esc(c.label)}: ${esc(c.text)}</b>${p.quote?`<p class="dt-note">Satıcı: “${esc(brief(p.quote,220))}”</p>`:''}<small>${p.status==='needs_review'?'İnceleme bekliyor':'Otomatik kaydedilemedi'}${p.reason?` · ${esc(String(p.reason).replace(/_/g,' '))}`:''}</small></div><button type="button" class="proposal-accept" data-accept-proposal='${esc(JSON.stringify([c.key,c.value]))}'>Kabul et</button></li>`).join('')}</ul></div>`:''};
 const threadHtml=r=>{const t=Array.isArray(r.thread)?r.thread:[];return t.length?`<ol class="thread" aria-label="Satıcıyla yazışma">${t.map(m=>`<li class="msg ${m.who==='sen'?'is-me':'is-seller'}"><b>${m.who==='sen'?'Sen':'Satıcı'}</b>${m.at?`<small>${esc(m.at)}</small>`:''}<p>${esc(m.text)}</p></li>`).join('')}</ol>`:''};
 function card(r){
  const f=feedback.get(String(r.id)),look=seenOf(r),excluded=r.lifecycle==='excluded',state=scenarioEligibility(r,scenario),modified=isScenarioModified(),scenarioValue=scenarioScore(r,scenario),relaxed=excluded&&state.relaxed.length;
@@ -358,7 +366,7 @@ function detailHtml(r,{state,modified,scenarioValue,scenarioDetail,sysReason,cha
  const scoreNote=r.userReopened?'Sistem elediği için puanlamamıştı; bu puan aynı formülle hesaplandı.':r.published&&!excluded&&Number(r.published.score)!==Number(r.score)?`Sistemde ${num(r.published.score)}; fark düzeltmenden.`:'';
  const cmp=c.median==null?'':`<dl class="dt-facts">${fact('Karşılaştırma grubu',`${c.type||'Nitelik belirsiz'} · ${c.scope||'Grup yok'}`)}${fact('Alan bandı',c.areaMin==null?'Belirsiz':`${num(c.areaMin)}–${num(c.areaMax)} m²`)}${fact('Medyan m² fiyatı',money(c.median))}</dl><p class="dt-method">Fark = 100 × (medyan − ilan m² fiyatı) / medyan. Aynı tapu niteliği, 0,5–2 kat alan; mahallede en az 5, yoksa Datça genelinde en az 8 farklı parsel. Aynı parselin kopyaları tek emsal. İlan fiyatıdır, gerçekleşmiş satış veya ekspertiz değildir. Bu karşılaştırma şimdilik puanı etkilemiyor; puan eski emsal hesabını kullanıyor.</p>`;
  const price=cmp||scoreNote?`<section class="dt-sec"><h3>Fiyat karşılaştırması</h3>${scoreNote?`<p class="dt-note">${esc(scoreNote)}</p>`:''}${cmp}</section>`:'';
- const contact=`<section class="dt-sec"><h3>Yazışma</h3><p class="dt-line"><span><i>İletişim</i> ${esc(contactText(r.contact))}</span><span><i>Son hareket</i> ${esc(date(r.lastActivityAt))}</span></p>${threadHtml(r)}${r.technicalComplete?'<p class="dt-note">Sit, yol ve rota kontrolünün tamamlanması, bütün kanıtların resmî olduğu ya da arazinin kullanıma uygun olduğu anlamına gelmez.</p>':''}${readableTitle(r.title)!==String(r.title||'').trim()?`<p class="dt-note">İlandaki başlık: ${esc(r.title)}</p>`:''}</section>`;
+ const contact=`<section class="dt-sec"><h3>Yazışma</h3><p class="dt-line"><span><i>İletişim</i> ${esc(contactText(r.contact))}</span><span><i>Son hareket</i> ${esc(date(r.lastActivityAt))}</span></p>${threadHtml(r)}${proposalsHtml(r)}${r.technicalComplete?'<p class="dt-note">Sit, yol ve rota kontrolünün tamamlanması, bütün kanıtların resmî olduğu ya da arazinin kullanıma uygun olduğu anlamına gelmez.</p>':''}${readableTitle(r.title)!==String(r.title||'').trim()?`<p class="dt-note">İlandaki başlık: ${esc(r.title)}</p>`:''}</section>`;
  const desc=r.listingDescription?`<section class="dt-sec"><h3>İlan açıklaması</h3><p class="dt-desc">${esc(r.listingDescription)}</p></section>`:'';
  const foot=`<p class="dt-foot">Adım: ${esc(stageLabels[r.funnelStage]||'—')} · Teknik araştırma: ${r.technicalComplete?'tamamlandı':'sürüyor'} · Final: ${esc(r.reviewOutcome||'yok')} · Kayıt ${esc(r.id)} · <button type="button" id="downloadProof" class="linklike">Kanıt kaydını indir (JSON)</button></p>`;
  return `${banners}${tiles}${status}${proofs}${visual}${price}${contact}${desc}${askSection(r)}${foot}`;
@@ -413,3 +421,10 @@ let swipeX=null;
 $('photoViewer').addEventListener('touchstart',e=>{swipeX=e.touches[0].clientX},{passive:true});
 $('photoViewer').addEventListener('touchend',e=>{if(swipeX==null)return;const dx=e.changedTouches[0].clientX-swipeX;swipeX=null;if(Math.abs(dx)>50)stepGallery(dx<0?1:-1)});
 $('photoViewer').addEventListener('close',()=>{delete $('photoViewer').dataset.gallery;$('photoViewerImg').removeAttribute('src')});
+
+$('detailContent').addEventListener('click',async e=>{
+ const b=e.target.closest('[data-accept-proposal]');if(!b||!active)return;
+ const id=String(active.id),[key,value]=JSON.parse(b.dataset.acceptProposal);b.disabled=true;b.textContent='Kaydediliyor…';
+ try{const saved=await saveFacts(id,{[key]:{value,basis:'seller'}},feedback.get(id)||{});feedback.set(id,saved);refreshRecords();const y=$('detail').scrollTop;openDetail(id,{refresh:true});$('detail').scrollTop=y}
+ catch(err){b.disabled=false;b.textContent=err.code==='permission-denied'?'Yetki yok':'Kaydedilemedi'}
+});
