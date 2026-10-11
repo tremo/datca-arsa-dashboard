@@ -52,6 +52,7 @@ export function readableTitle(t){let s=String(t??'').replace(/\s+/g,' ').trim();
 export const route=r=>{if(r.routeMax==null&&r.routeKmMax==null)return 'Ölçüm bekliyor';const range=(lo,hi,unit)=>hi==null?null:`${lo!=null&&lo!==hi?num(lo)+'–':''}${num(hi)} ${unit}`;return [range(r.routeMin,r.routeMax,'dk')||'Süre kaydı yok',range(r.routeKmMin,r.routeKmMax,'km')].filter(Boolean).join(' · ')||'Ölçüm bekliyor'};
 export function decode(v){if(Array.isArray(v))return v.map(x=>decode(x?.items??x));if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,decode(x)]));return v}
 let epoch=0;
+export async function loadV2Status(){try{const d=await getDoc(doc(db,'meta','v2status'));return d.exists()?decode(d.data()):null}catch{return null}}
 export function connect(onLoaded,onReset){
  const message=$('authMessage');
  $('signIn').onclick=async()=>{message.className='';message.textContent='Google giriş penceresi açılıyor…';try{await signInWithPopup(auth,provider)}catch(e){message.className='auth-error';message.textContent=e.code==='auth/popup-blocked'?'Giriş penceresi engellendi. Bu adresi Safari / Chrome’da açıp yeniden dene.':e.code==='auth/popup-closed-by-user'?'Giriş tamamlanmadı. Hazır olduğunda yeniden deneyebilirsin.':'Giriş tamamlanamadı: '+e.code}};

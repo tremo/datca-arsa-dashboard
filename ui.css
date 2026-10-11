@@ -1022,3 +1022,27 @@ table.compare{border-collapse:separate;border-spacing:0;width:max-content;min-wi
 .proposals li{display:flex;gap:10px;align-items:flex-start;justify-content:space-between}
 .proposals small{color:var(--muted);font-size:11.5px}
 .proposal-accept{flex:none;min-height:34px;padding:5px 12px;border-radius:8px;border:1px solid var(--green,#2f6b4f);background:#fff;color:var(--green,#2f6b4f);font-weight:700;cursor:pointer}
+
+/* Durum page */
+.status-page .st-card{background:#fff;border:1px solid var(--line);border-radius:14px;padding:14px 16px;margin:0 0 14px}
+.status-page .st-card h2{margin:0 0 10px;font-size:16px}
+.status-page .st-card h3{margin:14px 0 6px;font-size:13px;color:var(--muted)}
+.st-cols{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:760px){.st-cols{grid-template-columns:1fr}}
+.st-health,.st-list,.st-events,.st-sent{list-style:none;margin:0;padding:0;display:grid;gap:6px}
+.st-health .hl{display:flex;gap:8px;align-items:baseline;font-size:14px}
+.st-health .hl i{flex:none;width:18px;height:18px;border-radius:50%;display:inline-grid;place-items:center;font-style:normal;font-size:11px;font-weight:800;color:#fff}
+.st-health .is-ok i{background:#2f8f5b}.st-health .is-warn i{background:#d19a1f}.st-health .is-bad i{background:#c24a3a}
+.st-health .is-bad span{font-weight:700}
+.st-tiles{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px}
+@media (max-width:620px){.st-tiles{grid-template-columns:repeat(3,minmax(0,1fr))}}
+.st-tile{background:#f4f6f1;border-radius:10px;padding:10px 8px;text-align:center}
+.st-tile b{display:block;font-size:22px}.st-tile span{font-size:12px;color:var(--muted)}
+.st-list li{font-size:14px}.st-list b{display:inline-block;min-width:34px}
+.st-table{width:100%;border-collapse:collapse;font-size:13.5px}
+.st-table th{text-align:left;font-size:11.5px;color:var(--muted);font-weight:600;padding:2px 0}
+.st-table td{padding:4px 0;border-top:1px solid var(--line)}
+.st-table .n{text-align:right;width:64px}.st-table .is-bad{color:#c24a3a;font-weight:700}
+.st-sent{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));font-size:13px}
+.st-events li{font-size:13.5px;display:flex;gap:10px}.st-events time{flex:none;width:108px;color:var(--muted);font-size:12px}
+.st-events .is-incident{color:#a63d2f}.st-events .is-recovered{color:#2f8f5b}
