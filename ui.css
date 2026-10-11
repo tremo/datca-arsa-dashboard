@@ -1046,3 +1046,12 @@ table.compare{border-collapse:separate;border-spacing:0;width:max-content;min-wi
 .st-sent{grid-template-columns:repeat(auto-fill,minmax(130px,1fr));font-size:13px}
 .st-events li{font-size:13.5px;display:flex;gap:10px}.st-events time{flex:none;width:108px;color:var(--muted);font-size:12px}
 .st-events .is-incident{color:#a63d2f}.st-events .is-recovered{color:#2f8f5b}
+
+/* Fırsat puanı (yeni) */
+.opp-pill{display:inline-block;padding:1px 8px;border-radius:999px;font-size:11.5px;font-weight:700;border:1px solid transparent;white-space:nowrap}
+.opp-pill.is-strong{background:#dff0e4;color:#1f6b3d;border-color:#b9dcc4}
+.opp-pill.is-likely{background:#eaf4e6;color:#3d7a3a;border-color:#cfe5c8}
+.opp-pill.is-fair{background:#eef0ea;color:#4a5648;border-color:#dde1d8}
+.opp-pill.is-dear{background:#f8e4e0;color:#a63d2f;border-color:#efc5be}
+.opp-pill.is-unsure{background:#f1f1ee;color:#76796f;border-color:#e2e3dd}
+.opp-sec h3 small{font-weight:500;color:var(--muted)}
