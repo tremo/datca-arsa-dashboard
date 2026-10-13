@@ -91,6 +91,7 @@ export function scorePenalty(record){
 }
 
 export function scenarioScore(record,state){
+ if(record.scoreSource==='v2')return Number(record.score);       // Verda's score has no price/proximity split to re-weigh
  if(state.weights.value===70&&state.weights.proximity===30)return Number(record.score);
  return formulaScore(record,state.weights);
 }

@@ -32,7 +32,7 @@ export function sanitizeFacts(raw){
 // older publish left it out, the penalty is applied here and the record says so, so such a listing never shows a clean score.
 const SIT_PENALTY_LINE=/doğal sit\s*:\s*-\s*\d+/i,SIT_DEGREE=/^[23]\. derece doğal sit/i;
 export function withSitPenalty(r){
- if(r.lifecycle==='excluded'||!SIT_DEGREE.test(String(r.sitStatus||''))||!Array.isArray(r.why)||!Number.isFinite(Number(r.score)))return r;
+ if(r.scoreSource==='v2'||r.lifecycle==='excluded'||!SIT_DEGREE.test(String(r.sitStatus||''))||!Array.isArray(r.why)||!Number.isFinite(Number(r.score)))return r;
  if(r.why.some(w=>SIT_PENALTY_LINE.test(String(w))))return r;
  return {...r,score:Math.max(0,Number(r.score)-SIT_PENALTY),scoreAdjusted:SIT_PENALTY,why:[`${r.sitStatus}: -${SIT_PENALTY} puan`,...r.why].slice(0,3)};
 }

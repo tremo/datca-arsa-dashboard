@@ -68,6 +68,9 @@ function roadModel(r){
  const kind='neighbor_access',raw=String(r.evidence?.yolKomşu||'missing'),result=resultOf(r,kind),m=cmeta(r,kind),note=String(r.roadProof?.note||''),src=source(r,kind);
  if(raw.startsWith('excluded')||result==='none')return model(r,'road','no','Kadastral yol: yok · eler',sourceLine(src),{badge:src.badge,tone:'conflict'});
  if(exclusionSays(r,'noRoad'))return model(r,'road','no','Kadastral yol: yok · eler','Eleme nedeninde yazıyor',{badge:'Eleme nedeni',tone:'conflict'});
+ // Verda's TKGM corridor check, while no statement settles the road: every edge borders a numbered parcel (no road, unless the seller confirms a right of way) or one edge borders an unnumbered gap.
+ const corridor=String(r.v2Road||'');
+ if(corridor.startsWith('yok'))return model(r,'road','penalty','Yol yok (TKGM) · puan −40','Her kenar numaralı komşu parsele bakıyor; geçiş hakkı sorusu yanıt bekliyor',{badge:'TKGM parsel haritası',tone:'conflict'});
  if(r.rightOfWay?.present===true||result==='rightOfWay')return model(r,'road','penalty',`Geçiş hakkı: var · puan −${Number(r.rightOfWay?.scorePenalty)||10}`,join('Doğrudan kadastral yol cephesi değildir',sourceLine(src)||r.rightOfWay?.source),{badge:src.who||src.label?src.badge:'Beyan',tone:'provisional'});
  if(result==='cadastral')return model(r,'road','yes','Kadastral yol: var',sourceLine(src),{badge:src.badge,tone:src.tone});
  if(result==='road')return model(r,'road','yes','Yol cephesi: var',join(sourceLine(src),'kadastral olduğu ayrıca yazmıyor'),{badge:src.badge,tone:src.tone});
@@ -84,6 +87,7 @@ function roadModel(r){
   return model(r,'road','nosrc','Kadastral yol: var görünüyor',join('Kaynak kayıtlı değil',shortDate(m.observedAt)),{badge:'Kaynak kayıtlı değil',tone:'pending'});
  }
  if(raw==='verified_by_statement')return model(r,'road','yes','Kadastral yol: var',sourceLine(src),{badge:src.badge,tone:src.tone});
+ if(corridor.startsWith('koşullu'))return model(r,'road','uncertain','Kadastral yol: koşullu (TKGM)','Parselin bir kenarı numaralı komşuya değil, numarasız boşluğa bakıyor; yol olduğu teyit edilmedi',{badge:'TKGM · koşullu',tone:'provisional'});
  const recheck=/^eski yol doğrulaması/i.test(m.claim||'');
  return model(r,'road','unknown','Kadastral yol: bilinmiyor',recheck?'Önceki kayıt kanıtsızdı; yeniden bakılacak':r.evidence?.resmîParsel==='verified'?'Yol kanıtı bekleniyor':'Ada/parsel belli olmadan bakılamıyor',{badge:'Bekliyor',tone:'pending'});
 }
@@ -176,8 +180,8 @@ const NOTE_TR=[[/^Local official-geometry archive only/i,'Elde yalnız yerel ar�
 export function roadNoteText(r){const note=String(r.roadProof?.note||'').trim();if(!note)return '';const known=NOTE_TR.find(([re])=>re.test(note));if(known)return known[1];return isEnglish(note)?'Yol notu İngilizce; geliştirici bilgisinde.':note.replace(/^\?\s*/,'').replace(/\bverified_by_statement\b/g,'beyana dayalı').replace(/\bverified_by_user_policy\b/g,'kendi kuralınla').replace(/\bpending_official\b/g,'resmî teyit bekliyor').replace(/(\d)\s?m2\b/g,'$1 m²')}
 
 // B9: reason groups for eliminated listings. The pipeline's gate keys come first; without them the recorded reason is read.
-export const EXCLUSION_GROUPS=[['underMinimumArea','Alan 1.000 m² altı'],['overBudget','Fiyat 15 milyon TL üstü'],['noDirectAccess','Kadastral yola cephesi yok'],['naturalFirstDegree','1. derece doğal sit'],['archaeologicalSit','Arkeolojik sit'],['sharedTitle','Hisseli / paylı tapu'],['route','Mertur’a 45 dakikadan uzak'],['other','Diğer nedenler']];
-const GROUP_TEXT=[['sharedTitle',/hisse|paylı|müşterek|shared_title/],['archaeologicalSit',/arkeolojik|archaeolog/],['naturalFirstDegree',/(1\.|birinci) ?derece (doğal )?sit|doğal sit 1|1\.derece|first_degree/],['noDirectAccess',/kadastr\w* yol|doğrudan (kadastral |kadastro )?yol|yol cephe|yolu (yok|bulunma)|yol yok|yola (\d+|bir|üç) parsel|kadastro yoluna|res(mî|mi) yol|seçili yolu yok|cadastral|direct_cadastral|road_frontage/],['route',/45 dakika|45 dk|osrm|valhalla/],['underMinimumArea',/1\.000 m² altı|area_under|area_below/],['overBudget',/15 m tl|15 milyon|price_over/]];
+export const EXCLUSION_GROUPS=[['underMinimumArea','Alan 1.000 m² altı'],['overBudget','Fiyat 15 milyon TL üstü'],['noDirectAccess','Kadastral yola cephesi yok'],['naturalFirstDegree','1. derece doğal sit'],['archaeologicalSit','Arkeolojik sit'],['sharedTitle','Hisseli / paylı tapu'],['route','Mertur’a 45 dakikadan uzak'],['removed','İlan yayından kalktı'],['other','Diğer nedenler']];
+const GROUP_TEXT=[['sharedTitle',/hisse|paylı|müşterek|shared_title/],['archaeologicalSit',/arkeolojik|archaeolog/],['naturalFirstDegree',/(1\.|birinci) ?derece (doğal )?sit|doğal sit 1|1\.derece|first_degree/],['noDirectAccess',/kadastr\w* yol|doğrudan (kadastral |kadastro )?yol|yol cephe|yolu (yok|bulunma)|yol yok|yola (\d+|bir|üç) parsel|kadastro yoluna|res(mî|mi) yol|seçili yolu yok|cadastral|direct_cadastral|road_frontage/],['route',/45 dakika|45 dk|osrm|valhalla/],['removed',/yayından kalk|yayında değil|listing_unavailable/],['underMinimumArea',/1\.000 m² altı|area_under|area_below/],['overBudget',/15 m tl|15 milyon|price_over/]];
 export function exclusionCategories(r){
  if(r.lifecycle!=='excluded')return [];
  const keys=new Set((r.scenarioOfficialGateKeys||[]).filter(k=>EXCLUSION_GROUPS.some(([g])=>g===k)));
