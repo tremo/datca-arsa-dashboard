@@ -72,8 +72,7 @@ function funnel(r,d){
  if(ev.resmîParsel==='verified')passed.push('officialParcel');
  const checks=['natural_sit','archaeological_sit','access','route'].every(k=>!unknown.includes(k));
  if(passed.includes('officialParcel')&&checks)passed.push('verification');
- const reviewed=(r.funnelPassed||[]).includes('finalReview')&&passed.includes('verification');
- if(reviewed)passed.push('finalReview');
+ const reviewed=false;                     // the older system's final review is not carried over; Verda's own screening is the verdict
  const stage=STAGE_ORDER.find(k=>!passed.includes(k));
  r.funnelPassed=passed;r.funnelStage=reviewed?r.funnelStage:stage||'finalReview';r.funnelReached=[...new Set([...passed,r.funnelStage])];r.technicalComplete=passed.includes('verification');
  r.parallelMissing=unknown.map(k=>PARALLEL[k]).filter(Boolean);
@@ -87,7 +86,7 @@ function funnel(r,d){
 }
 
 // The funnel the "Araştırma adımları" panel draws, counted from the records, so it follows the same data as the list.
-const STAGE_LABEL={listingDetail:'İlan ayrıntısı',parcelIdentity:'Ada / parsel',officialParcel:'Tapu kaydı (TKGM)',verification:'Sit · yol · rota',finalReview:'Final inceleme'};
+const STAGE_LABEL={listingDetail:'İlan ayrıntısı',parcelIdentity:'Ada / parsel',officialParcel:'Tapu kaydı (TKGM)',verification:'Sit · yol · rota',finalReview:'Senin incelemen'};
 const CHECKS=[['natural_sit','Doğal sit','natural_sit'],['archaeological_sit','Arkeolojik sit','archaeological_sit'],['neighbor_access','Kadastral yol','neighbor_access'],['route','Mertur rotası','route']];
 export function funnelFromRecords(records,old={}){
  const live=records.filter(r=>r.lifecycle!=='excluded'),latest=rs=>rs.map(r=>r.lastActivityAt).filter(Boolean).sort().at(-1)||null;
@@ -119,6 +118,9 @@ function score(r,d){
  r.comparison={...(r.comparison||{}),discountPct:o.gapPct??null,median:o.fairUnitPrice??null,label:o.label,fair:true};
 }
 
+// The verdict is Verda's too: screening complete (eligible, or conditional with its conditions listed) reads "Koşullu olumlu"; the older review's verdict and risk note are dropped.
+function verdict(r,d){r.recommended=d.state==='eligible'||d.state==='conditional';r.reviewOutcome=null;r.reason='';r.published=undefined}
+
 // A listing only Verda knows: a record in the older shape, so every part of the page treats it like any other.
 function synthesize(d){
  const f=d.facts||{},id=String(d.listingId);
@@ -147,7 +149,7 @@ export function overlay(records,docs){
   override(r,d);
   applyFacts(r,d.facts,d);
   if(CLOSED.has(d.state)){close(r,d);continue}
-  if(r.lifecycle!=='excluded'){funnel(r,d);score(r,d)}
+  if(r.lifecycle!=='excluded'){funnel(r,d);score(r,d);verdict(r,d)}
  }
  rerank(records);
  return added;
