@@ -21,7 +21,7 @@ const COLUMNS=[
  {key:'price',label:'Fiyat',best:'min',num:true,value:r=>r.price??null,cell:r=>money(r.price)},
  {key:'area',label:'Alan',best:'max',num:true,value:areaValue,cell:r=>{const a=areaFacts(r);return `${esc(a.value)}${a.note?`<small>${esc(a.note)}</small>`:''}`}},
  {key:'unit',label:'m² fiyatı',best:'min',num:true,value:r=>areaFacts(r).unit??null,cell:r=>{const a=areaFacts(r);return a.unit==null?'—':`${money(a.unit)}${a.unitNote?`<small>${esc(a.unitNote)}</small>`:''}`}},
- {key:'discount',label:'Emsale göre',best:'max',value:r=>r.comparison?.discountPct??null,cell:r=>esc(comparisonShort(r))},
+ {key:'discount',label:'Adil fiyata göre',best:'max',value:r=>r.comparison?.discountPct??null,cell:r=>esc(comparisonShort(r))},
  {key:'type',label:'Nitelik',value:r=>r.officialType&&r.officialType!=='—'?r.officialType:null,cell:r=>esc(r.officialType&&r.officialType!=='—'?r.officialType:'—')},
  {key:'route',label:'Mertur’a',best:'min',num:true,value:r=>r.routeMax??null,cell:r=>`${esc(routeShort(r))}${r.routeKmMax!=null?`<small>${num(r.routeKmMax)} km</small>`:''}`},
  {key:'road',label:'Kadastral yol',value:r=>STATE_ORDER[criterionModel(r,'road').state]??4,cell:r=>criterionCell(r,'road')},
@@ -83,4 +83,4 @@ $('compareTable').addEventListener('pointerup',endDrag);$('compareTable').addEve
 $('compareTable').addEventListener('keydown',e=>{const h=e.target.closest('.cmp-handle');if(!h||!['ArrowUp','ArrowDown'].includes(e.key))return;e.preventDefault();const tr=h.closest('tr'),next=e.key==='ArrowUp'?tr.previousElementSibling:tr.nextElementSibling;if(!next)return;tbody().insertBefore(tr,e.key==='ArrowUp'?next:next.nextSibling);commitOrder(tr.dataset.id)});
 // Coming back with the browser's back button can show a stored copy of this page; it is loaded again so decisions made in the detail count.
 addEventListener('pageshow',e=>{if(e.persisted)location.reload()});
-connect(async({records,feedback:f,seen:remoteSeen})=>{feedback=f;seen=mergeSeen(loadLocalSeen(),remoteSeen);rows=effectiveRecords(records,f).filter(r=>['shortlist','maybe'].includes(decisionOf(r)));order=pickOrder(readLocalOrder(),await loadUserState('compare'));render();requestAnimationFrame(revealLastViewed)},()=>{rows=[];feedback=new Map();seen={};order=[];$('compareTable').replaceChildren();$('compareChips').replaceChildren()});
+connect(async({records,feedback:f,seen:remoteSeen})=>{feedback=f;seen=mergeSeen(loadLocalSeen(),remoteSeen);rows=effectiveRecords(records,f).filter(r=>['shortlist','maybe'].includes(decisionOf(r)));order=pickOrder(readLocalOrder(),await loadUserState('compare'));render();requestAnimationFrame(revealLastViewed)},()=>{rows=[];feedback=new Map();seen={};order=[];$('compareTable').replaceChildren();$('compareChips').replaceChildren()},undefined,{waitOverlay:true});

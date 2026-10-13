@@ -1,6 +1,7 @@
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-app.js';
 import {getAuth,GoogleAuthProvider,onAuthStateChanged,signInWithPopup,signOut} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-auth.js';
 import {collection,doc,getDoc,getDocs,getDocsFromCache,getFirestore,initializeFirestore,persistentLocalCache,persistentMultipleTabManager,terminate,clearIndexedDbPersistence,query,where,setDoc,serverTimestamp,deleteField} from 'https://www.gstatic.com/firebasejs/12.3.0/firebase-firestore.js';
+import {overlay} from './v2.js';
 const firebaseConfig={projectId:'datca-arsa',appId:'1:978587692621:web:0cf933d39328b1138d7604',storageBucket:'datca-arsa.firebasestorage.app',apiKey:'AIzaSyClWwdWqDg4ABvgyqkUAkGypFVJ9HJxGgY',authDomain:'datca-arsa.firebaseapp.com',messagingSenderId:'978587692621'};
 const app=initializeApp(firebaseConfig),auth=getAuth(app),provider=new GoogleAuthProvider();
 // E4: listings are kept in the browser's Firestore cache; they are read from the server again only when a new publish changes meta.generatedAt.
@@ -40,7 +41,7 @@ export const area=r=>r.officialArea??r.listingArea;
 // A8: a share sale lists the sold share and the whole parcel separately; m² price follows the share.
 export function areaFacts(r){const listing=r.listingArea,official=r.officialArea,shared=r.ownershipScreen?.status==='shared';if(shared&&listing!=null)return {label:'Satılan pay',value:`${num(listing)} m²`,note:official!=null?`parselin tamamı ${num(official)} m²`:'',unit:r.price!=null&&listing?r.price/listing:null,unitNote:'paya göre'};if(listing!=null&&official!=null&&Math.abs(official-listing)/Math.max(listing,1)>.15)return {label:'Alan',value:`${num(official)} m²`,note:`tapuda; ilanda ${num(listing)} m²`,unit:r.unitPrice,unitNote:''};return {label:'Toplam alan',value:`${num(official??listing)} m²`,note:'',unit:r.unitPrice,unitNote:''}}
 // Short lines shared by the phone card and the comparison table.
-export function comparisonShort(r){const d=r.comparison?.discountPct;return d==null?'emsal yok':Math.abs(d)<5?'emsaline yakın':d>0?`emsalden %${num(d)} ucuz`:`emsalden %${num(-d)} pahalı`}
+export function comparisonShort(r){const d=r.comparison?.discountPct,fair=r.comparison?.fair;return d==null?(fair?'adil fiyat hesaplanamadı':'emsal yok'):Math.abs(d)<5?(fair?'adil fiyata yakın':'emsaline yakın'):d>0?`${fair?'adil fiyattan':'emsalden'} %${num(d)} ucuz`:`${fair?'adil fiyattan':'emsalden'} %${num(-d)} pahalı`}
 export function routeShort(r){if(r.routeMax==null)return 'ölçüm bekliyor';const estimate=r.evidence?.rota!=='verified';return `${estimate?'≈ ':''}${num(r.routeMax)} dk${estimate?' (tahmini)':''}`}
 // B13: titles typed in capitals are shown in sentence case (place names keep their capital); the original stays in the detail.
 const PLACES=['datça','datca','palamutbükü','knidos','yaka','sındı','cumalı','hızırşah','mesudiye','karaköy','kızlan','emecik','reşadiye','iskele','yazı','ovabükü','hayıtbükü','kargı','gebekum','eksera','mersincik','bencik','aktur','ılıca','kurubük','değirmenbükü','marmaris','muğla','bozburun','pınarönü','körmen','pelit','zeytincik','ege','yunan'];
@@ -53,7 +54,8 @@ export const route=r=>{if(r.routeMax==null&&r.routeKmMax==null)return 'Ölçüm 
 export function decode(v){if(Array.isArray(v))return v.map(x=>decode(x?.items??x));if(v&&typeof v==='object')return Object.fromEntries(Object.entries(v).map(([k,x])=>[k,decode(x)]));return v}
 let epoch=0;
 export async function loadV2Status(){try{const d=await getDoc(doc(db,'meta','v2status'));return d.exists()?decode(d.data()):null}catch{return null}}
-export function connect(onLoaded,onReset,onOverlay){
+// `waitOverlay`: pages that draw once (comparison, map) wait for Verda's results before they draw, so they never show the older numbers.
+export function connect(onLoaded,onReset,onOverlay,{waitOverlay=false}={}){
  const message=$('authMessage');
  $('signIn').onclick=async()=>{message.className='';message.textContent='Google giriş penceresi açılıyor…';try{await signInWithPopup(auth,provider)}catch(e){message.className='auth-error';message.textContent=e.code==='auth/popup-blocked'?'Giriş penceresi engellendi. Bu adresi Safari / Chrome’da açıp yeniden dene.':e.code==='auth/popup-closed-by-user'?'Giriş tamamlanmadı. Hazır olduğunda yeniden deneyebilirsin.':'Giriş tamamlanamadı: '+e.code}};
  // Signing out also drops the cached listings from this device.
@@ -61,17 +63,6 @@ export function connect(onLoaded,onReset,onOverlay){
  // Verda's own results arrive in a separate collection and are laid over the listing record: the action taken for each unknown, how far the
  // conversation has come and the dates. Without access (rules not opened yet) or without data the page shows the older record unchanged.
  async function loadV2(){try{const [m,l]=await Promise.all([getDoc(doc(db,'meta','v2')),getDocs(collection(db,'v2Listings'))]);if(!m.exists())return null;return{meta:decode(m.data()),docs:new Map(l.docs.map(d=>[d.id,decode(d.data())]))}}catch{return null}}
- // What Verda has found out since the older record was made: the parcel number from the listing, the official TKGM record (area, type) and the
- // sellers' statements about sit. A newer fact fills in a field the older record leaves empty or unverified; it never removes anything.
- function applyFacts(r,f){if(!f)return;const v=k=>f[k]?.value,official=k=>f[k]?.grade==='resmi'&&v(k)!=null;r.evidence={...(r.evidence||{})};
-  if(v('parcel_key')&&(!r.parcel||r.parcel==='—'))r.parcel=String(v('parcel_key'));
-  if(v('parcel_key')&&r.evidence.parselKimliği!=='verified')r.evidence.parselKimliği='verified';
-  if(official('parcel_key')&&official('sale_area_m2')&&r.evidence.resmîParsel!=='verified')r.evidence.resmîParsel='verified';
-  if(official('sale_area_m2')&&!r.officialArea)r.officialArea=v('sale_area_m2');
-  if(official('property_type')&&(!r.officialType||r.officialType==='—'))r.officialType=String(v('property_type'));
-  if(f.natural_sit?.grade==='beyan'&&v('natural_sit')==='none'&&!/^verified/.test(String(r.evidence.doğalSit||'')))r.evidence.doğalSit='verified_by_statement';
-  if(f.archaeological_sit?.grade==='beyan'&&v('archaeological_sit')===false&&!/^verified/.test(String(r.evidence.arkeolojikSit||'')))r.evidence.arkeolojikSit='verified_by_statement'}
- function applyV2(records,v2){if(!v2)return;for(const r of records){const d=v2.docs.get(String(r.id));if(!d)continue;r.v2=d;if(Array.isArray(d.actions)&&d.actions.length)r.actions=d.actions;applyFacts(r,d.facts);if(Array.isArray(d.thread)&&d.thread.length)r.thread=d.thread;if(Array.isArray(d.proposals)&&d.proposals.length)r.proposals=d.proposals;if(d.opp&&typeof d.opp.score==='number')r.opp=d.opp;if(d.contact)r.contact=d.contact;if(!r.listedAt&&d.publishedAt)r.listedAt=d.publishedAt;if(!r.firstSeenAt&&d.discoveredAt)r.firstSeenAt=d.discoveredAt}}
  async function load(user){const token=++epoch;onReset();$('workspace').hidden=true;$('gate').hidden=false;$('signOut').hidden=!user;$('signIn').hidden=!!user;$('retry').hidden=true;message.className='';
  if(!user){$('gateTitle').textContent='Giriş gerekli';message.textContent='İlanlar ve notların yalnız yetkili Google hesabına açık.';$('source').textContent='Yalnız yetkili hesap';return}
  $('gateTitle').textContent='Veriler yükleniyor…';message.textContent='İlanlar, kanıtlar ve kararların yükleniyor.';
@@ -79,9 +70,10 @@ export function connect(onLoaded,onReset,onOverlay){
  const overlayLoad=loadV2();       // started with the rest, but the page does not wait for it
  const [l,f,seen]=await Promise.all([loadListings(meta),getDocs(collection(db,'listingFeedback')),getDoc(doc(db,'userState','seen')).then(d=>d.exists()&&d.data().items||{}).catch(()=>({}))]);if(token!==epoch||!auth.currentUser)return;
  const records=l.docs.map(d=>decode(d.data()));
+ if(waitOverlay){const v2=await Promise.race([overlayLoad,new Promise(r=>setTimeout(()=>r(null),8000))]);if(token!==epoch||!auth.currentUser)return;if(v2)overlay(records,v2.docs)}
  // E7: a publish in progress no longer locks the app; the page opens with a warning instead.
  document.querySelector('.stale-banner')?.remove();if(records.length!==meta.recordCount){writeStamp('');const warn=document.createElement('p');warn.className='stale-banner';warn.setAttribute('role','status');warn.textContent=`Veri yayını sürüyor olabilir: ${meta.recordCount} ilan beklenirken ${records.length} ilan geldi. Birkaç dakika sonra sayfayı yenile.`;$('workspace').prepend(warn)}
- await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}`;$('gate').hidden=true;$('workspace').hidden=false;overlayLoad.then(v2=>{if(!v2||token!==epoch||!auth.currentUser)return;applyV2(records,v2);$('source').textContent+=` · Verda ${date(v2.meta.generatedAt)}`;onOverlay?.(v2)});
+ await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}`;$('gate').hidden=true;$('workspace').hidden=false;if(waitOverlay)overlayLoad.then(v2=>{if(v2&&token===epoch)$('source').textContent+=` · Verda ${date(v2.meta.generatedAt)}`});else overlayLoad.then(v2=>{if(!v2||token!==epoch||!auth.currentUser)return;const added=overlay(records,v2.docs);$('source').textContent+=` · Verda ${date(v2.meta.generatedAt)}${added.length?` · ${added.length} yeni ilan`:''}`;onOverlay?.(v2,added)});
  }catch(e){if(token!==epoch)return;$('gateTitle').textContent='Veriler yüklenemedi';message.className='auth-error';message.textContent=e.code==='permission-denied'?'Bu hesabın erişim yetkisi yok. Çıkış yapıp yetkili Google hesabıyla giriş yap.':(e.code||e.message);$('retry').hidden=false}}
  $('retry').onclick=()=>load(auth.currentUser);onAuthStateChanged(auth,load);
 }

@@ -52,4 +52,4 @@ connect(({meta:m,records,feedback:f})=>{
   // Mert's corrections apply here too, so an eliminated or reopened listing shows the same status as in the list.
   const catalog=effectiveRecords(records,feedback).filter(r=>scenarioVisible(r,scenario));all=catalog.filter(r=>r.geometry&&r.centroid);total=catalog.length;init();render();
   requestAnimationFrame(()=>{map.invalidateSize();const id=new URLSearchParams(location.search).get('id'),s=shapes.get(id);if(s){fitParcel(map,s,18);s.openPopup()}else fit()});
-},()=>{all=[];shapes.clear();layer?.clearLayers();$('mapResults').replaceChildren()});
+},()=>{all=[];shapes.clear();layer?.clearLayers();$('mapResults').replaceChildren()},undefined,{waitOverlay:true});
