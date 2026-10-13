@@ -20,7 +20,7 @@ export const safeUrl=v=>{try{const u=new URL(v);return u.protocol==='https:'?u.h
 export const link=(url,label,extra='')=>safeUrl(url)?`<a class="button${extra?' '+extra:''}" href="${esc(safeUrl(url))}" target="_blank" rel="noopener noreferrer">${esc(label)} ↗</a>`:'';
 export const labels={official:'Resmî kaynak',statement:'Satıcı / emlakçı beyanı',provisional:'Kendi kuralın / sit sınırında',pending:'Bekliyor',conflict:'Çelişkili'};
 export const kindLabels={natural_sit:'Doğal sit',archaeological_sit:'Arkeolojik sit',neighbor_access:'Kadastral yol',route:'Mertur rotası'};
-export const stageLabels={listingDetail:'İlan ayrıntısı',parcelIdentity:'Ada / parsel',officialParcel:'Tapu kaydı (TKGM)',verification:'Sit · yol · rota',finalReview:'Final inceleme',complete:'Final sonuçlandı',excluded:'Sistem eledi'};
+export const stageLabels={listingDetail:'İlan ayrıntısı',parcelIdentity:'Ada / parsel',officialParcel:'Tapu kaydı (TKGM)',verification:'Sit · yol · rota',finalReview:'Senin incelemen',complete:'Final sonuçlandı',excluded:'Sistem eledi'};
 export const badge=(text,grade='')=>`<span class="badge ${esc(grade)}">${esc(text)}</span>`;
 // B11: one status vocabulary and colour for the list, the detail and the map. “Final: olumlu değil” covers every final decision that is not positive.
 export const STATUS={active:{label:'Araştırılıyor',color:'#00d7ef'},positive:{label:'Koşullu olumlu',color:'#ffd94a'},held:{label:'Final: olumlu değil',color:'#c38bff'},excluded:{label:'Elendi',color:'#ff5b55',dashed:true}};
