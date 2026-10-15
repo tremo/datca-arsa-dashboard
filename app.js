@@ -213,7 +213,8 @@ const proposalsHtml=r=>{const items=(Array.isArray(r.proposals)?r.proposals:[]).
 // The newer opportunity score (price against a size-adjusted fair price, fit for the buyer's purposes, distance) sits next to the older one.
 const OPP_KEY={'Güçlü fırsat':'strong','Olası fırsat':'likely','Adil fiyat':'fair','Pahalı':'dear','Belirsiz':'unsure'};
 const oppGap=o=>o.gapPct==null?'':` ${o.gapPct>0?'+':'−'}${num(Math.abs(o.gapPct))}%`;
-const oppBadges=r=>{const o=r.opp;if(!o)return '';return `<span class="opp-pill is-${OPP_KEY[o.label]||'unsure'}" title="${esc(o.label)}${esc(oppGap(o))} adil fiyata göre${o.fairUnitPrice?` · adil fiyat ≈ ${num(o.fairUnitPrice)} ₺/m²`:''}">${esc(o.label)}${esc(oppGap(o))}</span>`};
+const oppDoubt=o=>(o.caps||[]).find(c=>/doğrulanmalı/.test(c));
+const oppBadges=r=>{const o=r.opp;if(!o)return '';const doubt=oppDoubt(o);return `<span class="opp-pill is-${OPP_KEY[o.label]||'unsure'}" title="${esc(o.label)}${esc(oppGap(o))} adil fiyata göre${o.fairUnitPrice?` · adil fiyat ≈ ${num(o.fairUnitPrice)} ₺/m²`:''}${doubt?` · ${esc(doubt)}`:''}">${esc(o.label)}${esc(oppGap(o))}${doubt?' · doğrulanmalı':''}</span>`};
 const oppSection=r=>{const o=r.opp;if(!o)return '';const row=(k,v,t='')=>`<div class="dt-tile" title="${esc(t)}"><span>${esc(k)}</span><b>${esc(v)}</b></div>`;
  return `<section class="dt-sec opp-sec"><h3>Puan nasıl çıktı</h3><div class="dt-tiles">${row('Fiyat',num(o.opportunity),'Fiyatın adil fiyata göre durumu · puanın %45’i')}${row('Amaç uygunluğu',num(o.purpose),'Yatırım %40 · ev %20 · üretim %40 · puanın %40’ı')}${row('Mertur',num(o.proximity),'Mertur mesafe puanı · puanın %15’i')}</div>
  <p class="dt-note">${esc(o.label)}${esc(oppGap(o))}${o.fairUnitPrice?` · adil fiyat ≈ ${num(o.fairUnitPrice)} ₺/m²`:''} · yol: ${esc(o.road||'bilinmiyor')}${(o.caps||[]).length?` · ${esc(o.caps.join(', '))}`:''}</p>
