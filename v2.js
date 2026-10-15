@@ -158,6 +158,7 @@ export function overlay(records,docs){
   override(r,d);
   applyFacts(r,d.facts,d);
   if(d.areaConflict)areaInDispute(r,d.areaConflict);
+  if(Array.isArray(d.parcels)&&d.parcels.length>1){r.parcel=d.parcels.map(p=>p.parcel).join(' + ');r.saleParcels=d.parcels}   // a sale of several deeds
   if(CLOSED.has(d.state)){close(r,d);continue}
   if(r.lifecycle!=='excluded'){funnel(r,d);score(r,d);verdict(r,d);if(r.areaConflict)r.nextStep=areaLine(r.areaConflict)}
  }
