@@ -1,0 +1,10 @@
+{
+  "hosting": {
+    "site": "datca-arsa",
+    "public": "public",
+    "redirects": [
+      { "source": "/", "destination": "https://tremo.github.io/datca-arsa-dashboard/", "type": 302 },
+      { "source": "/:path*", "destination": "https://tremo.github.io/datca-arsa-dashboard/:path", "type": 302 }
+    ]
+  }
+}
