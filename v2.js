@@ -134,6 +134,15 @@ function synthesize(d){
 }
 
 // Every overlay document is laid over its record; ids the older data does not have are added. Returns the records that were added.
+// Verda found the official parcel far smaller or larger than the land advertised (two title deeds, a wrong parcel number, a share):
+// the advertised area is shown and priced, the official one is named, and the listing waits for the user's look.
+const areaLine=c=>`Alan uyuşmazlığı: ilan ${tr.format(c.statedM2)} m², TKGM parseli ${tr.format(c.officialM2)} m² (birden çok tapu, yanlış parsel ya da hisse olabilir); senin incelemeni bekliyor`;
+function areaInDispute(r,c){
+ if(!isNum(c.statedM2)||!isNum(c.officialM2))return;
+ r.areaConflict=c;r.officialArea=null;r.listingArea=c.statedM2;
+ r.unitPrice=isNum(r.price)&&c.statedM2>0?Math.round(r.price/c.statedM2):null;
+}
+
 export function overlay(records,docs){
  const byId=new Map(records.map(r=>[String(r.id),r])),added=[];
  for(const [id,d] of docs){
@@ -148,8 +157,9 @@ export function overlay(records,docs){
   if(!r.firstSeenAt&&d.discoveredAt)r.firstSeenAt=d.discoveredAt;
   override(r,d);
   applyFacts(r,d.facts,d);
+  if(d.areaConflict)areaInDispute(r,d.areaConflict);
   if(CLOSED.has(d.state)){close(r,d);continue}
-  if(r.lifecycle!=='excluded'){funnel(r,d);score(r,d);verdict(r,d)}
+  if(r.lifecycle!=='excluded'){funnel(r,d);score(r,d);verdict(r,d);if(r.areaConflict)r.nextStep=areaLine(r.areaConflict)}
  }
  rerank(records);
  return added;
