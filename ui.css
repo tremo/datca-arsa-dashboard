@@ -1055,3 +1055,7 @@ table.compare{border-collapse:separate;border-spacing:0;width:max-content;min-wi
 .opp-pill.is-dear{background:#f8e4e0;color:#a63d2f;border-color:#efc5be}
 .opp-pill.is-unsure{background:#f1f1ee;color:#76796f;border-color:#e2e3dd}
 .opp-sec h3 small{font-weight:500;color:var(--muted)}
+
+/* the local agent panel: only reachable on the Mac that runs Verda */
+.topbar nav a.nav-local{opacity:.75;border-left:1px solid var(--line,rgba(127,127,127,.35));padding-left:.9em;margin-left:.3em}
+.source.is-stale{color:var(--gold)}
