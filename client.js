@@ -73,9 +73,21 @@ export function connect(onLoaded,onReset,onOverlay,{waitOverlay=false}={}){
  if(waitOverlay){const v2=await Promise.race([overlayLoad,new Promise(r=>setTimeout(()=>r(null),8000))]);if(token!==epoch||!auth.currentUser)return;if(v2)overlay(records,v2.docs)}
  // E7: a publish in progress no longer locks the app; the page opens with a warning instead.
  document.querySelector('.stale-banner')?.remove();if(records.length!==meta.recordCount){writeStamp('');const warn=document.createElement('p');warn.className='stale-banner';warn.setAttribute('role','status');warn.textContent=`Veri yayını sürüyor olabilir: ${meta.recordCount} ilan beklenirken ${records.length} ilan geldi. Birkaç dakika sonra sayfayı yenile.`;$('workspace').prepend(warn)}
- await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;$('source').textContent=`Veri: ${date(meta.sourceUpdatedAt)} · ${records.length} ilan · son yayın ${date(meta.generatedAt)}`;$('gate').hidden=true;$('workspace').hidden=false;if(waitOverlay)overlayLoad.then(v2=>{if(v2&&token===epoch)$('source').textContent+=` · Verda ${date(v2.meta.generatedAt)}`});else overlayLoad.then(v2=>{if(!v2||token!==epoch||!auth.currentUser)return;const added=overlay(records,v2.docs);$('source').textContent+=` · Verda ${date(v2.meta.generatedAt)}${added.length?` · ${added.length} yeni ilan`:''}`;onOverlay?.(v2,added)});
+ await onLoaded({meta,records,feedback:new Map(f.docs.map(d=>[d.id,d.data()])),seen});if(token!==epoch)return;showSource(meta,records,undefined);$('gate').hidden=true;$('workspace').hidden=false;if(waitOverlay)overlayLoad.then(v2=>{if(token===epoch)showSource(meta,records,v2)});else overlayLoad.then(v2=>{if(token!==epoch||!auth.currentUser)return;if(!v2){showSource(meta,records,null);return}const added=overlay(records,v2.docs);showSource(meta,records,v2);onOverlay?.(v2,added)});
  }catch(e){if(token!==epoch)return;$('gateTitle').textContent='Veriler yüklenemedi';message.className='auth-error';message.textContent=e.code==='permission-denied'?'Bu hesabın erişim yetkisi yok. Çıkış yapıp yetkili Google hesabıyla giriş yap.':(e.code||e.message);$('retry').hidden=false}}
  $('retry').onclick=()=>load(auth.currentUser);onAuthStateChanged(auth,load);
+}
+// The line under the title says where the data comes from and how fresh it is. Verda is the source: its last publish and its last listing
+// scan. The frozen 4 Oct archive of the old system only fills listings Verda has not re-read, and is named as such, never as "the data".
+function showSource(meta,records,v2){
+ const el=$('source');if(!el)return;
+ const archive=`Eski sistemin 4 Ekim arşivi (${date(meta.sourceUpdatedAt)}) yalnız Verda’nın henüz yeniden okumadığı ilanları tamamlar.`;
+ if(v2===undefined){el.textContent='Verda verisi yükleniyor…';el.title=archive;return}
+ if(!v2){el.textContent=`Verda verisi alınamadı · şu an yalnız eski arşiv (${date(meta.sourceUpdatedAt)}) görünüyor, sayfayı yenile`;el.classList.add('is-stale');el.title=archive;return}
+ const m=v2.meta||{},open=records.filter(r=>r.lifecycle!=='excluded').length,scan=m.lastScanAt?` · son ilan taraması ${date(m.lastScanAt)}`:'';
+ const age=m.generatedAt?(Date.now()-new Date(m.generatedAt).getTime())/60000:Infinity;
+ el.textContent=`Verda · ${date(m.generatedAt)} itibarıyla · ${records.length} ilan, ${open} aday${scan}${age>30?' · güncelleme gecikiyor':''}`;
+ el.classList.toggle('is-stale',age>30);el.title=archive;
 }
 // Corrections live in the same feedback document; a correction set back to "sistemdeki gibi" is deleted from it.
 // Only the changed field is written, so a note or decision saved on another device is never overwritten.
