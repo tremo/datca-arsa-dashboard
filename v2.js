@@ -20,6 +20,12 @@ export function closureReasons(d,r={}){
  return {keys,text:keys.map(part).join('; ')||'Verda eledi'};
 }
 
+// The older system's exclusion for price alone is a fact about one day: when the price is back under the limit and Verda keeps the listing open, it is a candidate again.
+const reopenable=(r,d)=>r.lifecycle==='excluded'&&r.closedBy!=='verda'&&r.scenarioOfficialRelaxable!==false&&(r.scenarioOfficialGateKeys||[]).join()==='overBudget'&&isNum(d.priceTl)&&d.priceTl<=15e6;
+function reopen(r){
+ Object.assign(r,{lifecycle:'verifying',funnelStage:'listingDetail',defaultVisible:true,reason:'',scenarioOfficialGateKeys:[],scenarioFacts:{...(r.scenarioFacts||{}),overBudget:false},priceReopened:true});
+}
+
 function close(r,d){
  if(r.lifecycle==='excluded')return;                                  // already out; the older reason stays
  const {keys,text}=closureReasons(d,r),relaxable=d.state==='excluded'&&keys.every(k=>['overBudget','underMinimumArea','sharedTitle','archaeologicalSit','naturalFirstDegree','noDirectAccess'].includes(k));
@@ -159,6 +165,7 @@ export function overlay(records,docs){
   applyFacts(r,d.facts,d);
   if(d.areaConflict)areaInDispute(r,d.areaConflict);
   if(Array.isArray(d.parcels)&&d.parcels.length>1){r.parcel=d.parcels.map(p=>p.parcel).join(' + ');r.saleParcels=d.parcels}   // a sale of several deeds
+  if(!CLOSED.has(d.state)&&reopenable(r,d))reopen(r);
   if(CLOSED.has(d.state)){close(r,d);continue}
   if(r.lifecycle!=='excluded'){funnel(r,d);score(r,d);verdict(r,d);if(r.areaConflict)r.nextStep=areaLine(r.areaConflict)}
  }
