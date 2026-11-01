@@ -17,6 +17,7 @@ export function closureReasons(d,r={}){
  if(d.state==='removed')return {keys:['removed'],text:`İlan yayından kalktı · Sahibinden “yayında değildir” diyor${d.removedAt?` (${day(d.removedAt)})`:''}`};
  const keys=d.state==='outside_search'?['route']:(d.decisionReasons||[]).map(x=>GATE[x]).filter(Boolean);
  const part=k=>k==='overBudget'?`Fiyat 15 milyon TL üstü${isNum(r.price)?` (${mTL(r.price)})`:''}`:k==='underMinimumArea'?`Alan 1.000 m² altında${isNum(d.areaM2)?` (${tr.format(d.areaM2)} m²)`:''}`:k==='sharedTitle'?'Hisseli / paylı tapu':k==='archaeologicalSit'?'Arkeolojik sit':k==='naturalFirstDegree'?'1. derece doğal sit':k==='noDirectAccess'?'Kadastral yola cephesi yok; geçiş hakkı da yok':'Mertur’a 45 dakikadan uzak';
+ if(!keys.length&&(d.decisionReasons||[]).includes('user_excluded'))return {keys,text:'Sen eledin · panoda “İlgilenmiyorum” dedin'};
  return {keys,text:keys.map(part).join('; ')||'Verda eledi'};
 }
 
@@ -39,6 +40,8 @@ function check(r,kind,{result,role,channel,method,at,claim}){
  r.criterionMeta={...(r.criterionMeta||{}),[kind]:{...(r.criterionMeta?.[kind]||{}),claim:claim||null,observedAt:at||null,method,source:null}};
 }
 const said=f=>f?.quote?`Satıcı: “${String(f.quote).replace(/\s+/g,' ').trim().slice(0,200)}”`:null;
+const said_=f=>f?.grade==='beyan'||f?.grade==='kullanici',who=f=>f?.grade==='kullanici'?'user':'seller';
+const settled=(r,key)=>/^verified(_by_user_policy)?$/.test(String(r.evidence?.[key]||''));     // an official record already there
 const statement=(r,key)=>!/^verified/.test(String(r.evidence?.[key]||''));       // a statement fills a gap; it never replaces a verified record
 
 export function applyFacts(r,f,d={}){
@@ -50,9 +53,13 @@ export function applyFacts(r,f,d={}){
  if(official(f,'property_type'))r.officialType=String(fv(f,'property_type'));
  else if(fv(f,'property_type')&&(!r.officialType||r.officialType==='—'))r.officialType=String(fv(f,'property_type'));
  const n=f.natural_sit,a=f.archaeological_sit,access=f.access;
- if(n?.grade==='beyan'&&fv(f,'natural_sit')==='none'&&statement(r,'doğalSit')){r.evidence.doğalSit='verified_by_statement';check(r,'natural_sit',{result:'seller_states_no_natural_sit',role:'seller',channel:'message',method:'seller message',at:n.at,claim:said(n)})}
- if(n?.grade==='beyan'&&/^(second|third)_degree$/.test(fv(f,'natural_sit'))&&!/^[123]\./.test(String(r.sitStatus||''))){r.sitStatus=`${fv(f,'natural_sit')==='second_degree'?2:3}. derece doğal sit`;r.evidence.doğalSit='verified_by_statement';check(r,'natural_sit',{result:'sit_present_type_unknown',role:'seller',channel:'message',method:'seller message',at:n.at,claim:said(n)})}
- if(a?.grade==='beyan'&&fv(f,'archaeological_sit')===false&&statement(r,'arkeolojikSit')){r.evidence.arkeolojikSit='verified_by_statement';check(r,'archaeological_sit',{result:'seller_states_no_archaeological_sit',role:'seller',channel:'message',method:'seller message',at:a.at,claim:said(a)})}
+ if(said_(n)&&fv(f,'natural_sit')==='none'&&statement(r,'doğalSit')){r.evidence.doğalSit='verified_by_statement';check(r,'natural_sit',{result:'seller_states_no_natural_sit',role:who(n),channel:'message',method:'seller message',at:n.at,claim:said(n)})}
+ if(said_(n)&&/^(second|third)_degree$/.test(fv(f,'natural_sit'))&&!/^[123]\./.test(String(r.sitStatus||''))){r.sitStatus=`${fv(f,'natural_sit')==='second_degree'?2:3}. derece doğal sit`;r.evidence.doğalSit='verified_by_statement';check(r,'natural_sit',{result:'sit_present_type_unknown',role:who(n),channel:'message',method:'seller message',at:n.at,claim:said(n)})}
+ if(said_(a)&&fv(f,'archaeological_sit')===false&&statement(r,'arkeolojikSit')){r.evidence.arkeolojikSit='verified_by_statement';check(r,'archaeological_sit',{result:'seller_states_no_archaeological_sit',role:who(a),channel:'message',method:'seller message',at:a.at,claim:said(a)})}
+ if(n?.grade==='resmi'&&!settled(r,'doğalSit')&&/^(none|first_degree|second_degree|third_degree)$/.test(fv(f,'natural_sit'))){
+  const v=fv(f,'natural_sit'),degree={first_degree:1,second_degree:2,third_degree:3}[v];
+  r.evidence.doğalSit='verified';if(degree&&!/^[123]\./.test(String(r.sitStatus||'')))r.sitStatus=`${degree}. derece doğal sit`;
+  check(r,'natural_sit',{result:v==='none'?'no_natural_sit':'sit_present',role:'official',channel:'ministry map',method:'ministry sit map overlay',at:n.at,claim:null})}
  const road=fv(f,'access');
  if(road==='direct'&&statement(r,'yolKomşu')){r.evidence.yolKomşu='verified_by_statement';check(r,'neighbor_access',{result:'cadastral_road_claimed',role:access.grade==='kullanici'?'user':'seller',channel:'message',method:'seller message',at:access.at,claim:said(access)})}
  if(road==='existing_easement'&&!r.rightOfWay?.present){r.rightOfWay={status:'claimed',scorePenalty:10,present:true};r.evidence.yolKomşu='verified_by_statement';check(r,'neighbor_access',{result:'right_of_way_claimed',role:access.grade==='kullanici'?'user':'seller',channel:'message',method:'seller message',at:access.at,claim:said(access)})}
