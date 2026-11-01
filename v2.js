@@ -29,7 +29,7 @@ function reopen(r){
 
 function close(r,d){
  if(r.lifecycle==='excluded')return;                                  // already out; the older reason stays
- const {keys,text}=closureReasons(d,r),relaxable=d.state==='excluded'&&keys.every(k=>['overBudget','underMinimumArea','sharedTitle','archaeologicalSit','naturalFirstDegree','noDirectAccess'].includes(k));
+ const {keys,text}=closureReasons(d,r),relaxable=d.state==='excluded'&&keys.length>0&&keys.every(k=>['overBudget','underMinimumArea','sharedTitle','archaeologicalSit','naturalFirstDegree','noDirectAccess'].includes(k));
  Object.assign(r,{lifecycle:'excluded',funnelStage:'excluded',recommended:false,reason:text,scenarioOfficialGateKeys:keys,scenarioOfficialRelaxable:relaxable,closedBy:'verda',closedKind:d.state,
   scenarioFacts:{...(r.scenarioFacts||{}),...Object.fromEntries(keys.map(k=>[k,true]))}});
 }
@@ -39,13 +39,14 @@ function check(r,kind,{result,role,channel,method,at,claim}){
  r.checks={...(r.checks||{}),[kind]:{...(r.checks?.[kind]||{}),status:'verified',observed_at:at||null,evidence:{verification:{result,source_role:role,source_channel:channel,verification_method:method,observed_at:at||null}}}};
  r.criterionMeta={...(r.criterionMeta||{}),[kind]:{...(r.criterionMeta?.[kind]||{}),claim:claim||null,observedAt:at||null,method,source:null}};
 }
-const said=f=>f?.quote?`Satıcı: “${String(f.quote).replace(/\s+/g,' ').trim().slice(0,200)}”`:null;
+const said=f=>f?.quote?`${f.grade==='kullanici'?'Sen':'Satıcı'}: “${String(f.quote).replace(/\s+/g,' ').trim().slice(0,200)}”`:null;
 const said_=f=>f?.grade==='beyan'||f?.grade==='kullanici',who=f=>f?.grade==='kullanici'?'user':'seller';
 const settled=(r,key)=>/^verified(_by_user_policy)?$/.test(String(r.evidence?.[key]||''));     // an official record already there
 const statement=(r,key)=>!/^verified/.test(String(r.evidence?.[key]||''));       // a statement fills a gap; it never replaces a verified record
 
 export function applyFacts(r,f,d={}){
  if(!f)return;r.evidence={...(r.evidence||{})};
+ const replaced=official(f,'parcel_key')&&String(fv(f,'parcel_key'))!==String(r.parcel||'').trim();      // the older record is about another number
  if(official(f,'parcel_key')){const key=String(fv(f,'parcel_key'));if(key!==String(r.parcel||'').trim())r.parcel=key;r.evidence.parselKimliği='verified'}
  else if(fv(f,'parcel_key')&&(!r.parcel||r.parcel==='—')){r.parcel=String(fv(f,'parcel_key'));r.evidence.parselKimliği='verified'}
  if(official(f,'parcel_key')&&official(f,'sale_area_m2'))r.evidence.resmîParsel='verified';
@@ -56,9 +57,9 @@ export function applyFacts(r,f,d={}){
  if(said_(n)&&fv(f,'natural_sit')==='none'&&statement(r,'doğalSit')){r.evidence.doğalSit='verified_by_statement';check(r,'natural_sit',{result:'seller_states_no_natural_sit',role:who(n),channel:'message',method:'seller message',at:n.at,claim:said(n)})}
  if(said_(n)&&/^(second|third)_degree$/.test(fv(f,'natural_sit'))&&!/^[123]\./.test(String(r.sitStatus||''))){r.sitStatus=`${fv(f,'natural_sit')==='second_degree'?2:3}. derece doğal sit`;r.evidence.doğalSit='verified_by_statement';check(r,'natural_sit',{result:'sit_present_type_unknown',role:who(n),channel:'message',method:'seller message',at:n.at,claim:said(n)})}
  if(said_(a)&&fv(f,'archaeological_sit')===false&&statement(r,'arkeolojikSit')){r.evidence.arkeolojikSit='verified_by_statement';check(r,'archaeological_sit',{result:'seller_states_no_archaeological_sit',role:who(a),channel:'message',method:'seller message',at:a.at,claim:said(a)})}
- if(n?.grade==='resmi'&&!settled(r,'doğalSit')&&/^(none|first_degree|second_degree|third_degree)$/.test(fv(f,'natural_sit'))){
+ if(n?.grade==='resmi'&&(replaced||!settled(r,'doğalSit'))&&/^(none|first_degree|second_degree|third_degree)$/.test(fv(f,'natural_sit'))){
   const v=fv(f,'natural_sit'),degree={first_degree:1,second_degree:2,third_degree:3}[v];
-  r.evidence.doğalSit='verified';if(degree&&!/^[123]\./.test(String(r.sitStatus||'')))r.sitStatus=`${degree}. derece doğal sit`;
+  r.evidence.doğalSit='verified';if(replaced)r.sitStatus='';if(degree&&!/^[123]\./.test(String(r.sitStatus||'')))r.sitStatus=`${degree}. derece doğal sit`;
   check(r,'natural_sit',{result:v==='none'?'no_natural_sit':'sit_present',role:'official',channel:'ministry map',method:'says_polygon_overlay',at:n.at,claim:null})}      // the older records' own name for it: the criterion row reads it as an official map result
  const road=fv(f,'access');
  if(road==='direct'&&statement(r,'yolKomşu')){r.evidence.yolKomşu='verified_by_statement';check(r,'neighbor_access',{result:'cadastral_road_claimed',role:access.grade==='kullanici'?'user':'seller',channel:'message',method:'seller message',at:access.at,claim:said(access)})}
@@ -115,7 +116,8 @@ function override(r,d){
  if(isNum(d.priceTl)&&d.priceTl>0&&d.priceTl!==r.price){if(isNum(r.price))r.priceHistory={...(r.priceHistory||{}),status:'changed',previous:r.price,current:d.priceTl,source:'verda'};r.price=d.priceTl}
  if(isNum(d.areaM2)&&d.areaM2>0&&!r.officialArea&&d.areaM2!==r.listingArea)r.listingArea=d.areaM2;
  const area=r.officialArea??r.listingArea;if(isNum(r.price)&&isNum(area)&&area>0)r.unitPrice=Math.round(r.price/area);
- if(d.geometry&&d.centroid&&!r.geometry){r.geometry=d.geometry;r.centroid=d.centroid}           // the outline Verda got from TKGM, where the older record has none
+ const otherParcel=d.facts?.parcel_key?.grade==='resmi'&&String(d.facts.parcel_key.value)!==String(r.parcel||'').trim();
+ if(d.geometry&&d.centroid&&(!r.geometry||otherParcel)){r.geometry=d.geometry;r.centroid=d.centroid}           // the outline Verda got from TKGM, where the older record has none or draws another parcel
  if(d.links?.tkgm)r.parcelUrl=d.links.tkgm;if(d.links?.listing&&!r.listingUrl)r.listingUrl=d.links.listing;
  if(d.neighborhood&&(!r.neighborhood||r.neighborhood==='—'))r.neighborhood=d.neighborhood;
  if(isNum(d.routeMinutesMax)){r.routeMax=d.routeMinutesMax;r.routeMin=isNum(d.routeMinutesMin)?d.routeMinutesMin:d.routeMinutesMax;r.evidence={...(r.evidence||{}),rota:'verified'}}
