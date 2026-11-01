@@ -59,7 +59,7 @@ export function applyFacts(r,f,d={}){
  if(n?.grade==='resmi'&&!settled(r,'doğalSit')&&/^(none|first_degree|second_degree|third_degree)$/.test(fv(f,'natural_sit'))){
   const v=fv(f,'natural_sit'),degree={first_degree:1,second_degree:2,third_degree:3}[v];
   r.evidence.doğalSit='verified';if(degree&&!/^[123]\./.test(String(r.sitStatus||'')))r.sitStatus=`${degree}. derece doğal sit`;
-  check(r,'natural_sit',{result:v==='none'?'no_natural_sit':'sit_present',role:'official',channel:'ministry map',method:'ministry sit map overlay',at:n.at,claim:null})}
+  check(r,'natural_sit',{result:v==='none'?'no_natural_sit':'sit_present',role:'official',channel:'ministry map',method:'says_polygon_overlay',at:n.at,claim:null})}      // the older records' own name for it: the criterion row reads it as an official map result
  const road=fv(f,'access');
  if(road==='direct'&&statement(r,'yolKomşu')){r.evidence.yolKomşu='verified_by_statement';check(r,'neighbor_access',{result:'cadastral_road_claimed',role:access.grade==='kullanici'?'user':'seller',channel:'message',method:'seller message',at:access.at,claim:said(access)})}
  if(road==='existing_easement'&&!r.rightOfWay?.present){r.rightOfWay={status:'claimed',scorePenalty:10,present:true};r.evidence.yolKomşu='verified_by_statement';check(r,'neighbor_access',{result:'right_of_way_claimed',role:access.grade==='kullanici'?'user':'seller',channel:'message',method:'seller message',at:access.at,claim:said(access)})}
