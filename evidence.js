@@ -6,7 +6,7 @@ const KIND={parcel:'official_parcel',road:'neighbor_access',natural:'natural_sit
 const LABEL={parcel:'Tapu kaydı',road:'Kadastral yol',natural:'Doğal sit',archaeological:'Arkeolojik sit'};
 const ICON={yes:'✓',no:'✕',penalty:'−',edge:'!',uncertain:'!',unknown:'?',nores:'?',nosrc:'?'};
 
-const ROLE={seller:'Satıcı',seller_or_agent:'İlan sahibi',seller_or_listing_contact:'İlan sahibi',listing_publisher_seller_or_agent:'İlan sahibi',real_estate_agent:'Emlakçı',agent:'Emlakçı',listing_agent:'Emlakçı',listing_publisher_agent:'Emlakçı'};
+const ROLE={user:'Sen',seller:'Satıcı',seller_or_agent:'İlan sahibi',seller_or_listing_contact:'İlan sahibi',listing_publisher_seller_or_agent:'İlan sahibi',real_estate_agent:'Emlakçı',agent:'Emlakçı',listing_agent:'Emlakçı',listing_publisher_agent:'Emlakçı'};
 const RESULT={
  archaeological_sit:{no_archaeological_sit:'no',seller_states_no_archaeological_sit:'no',archaeological_sit_present_a1:'present',sit_present_type_unknown:'typeUnknown',first_degree_sit_type_unknown:'typeUnknown'},
  natural_sit:{no_natural_sit:'no',seller_states_no_natural_sit:'no',sit_present_type_unknown:'typeUnknown',first_degree_sit_type_unknown:'typeUnknown',natural_sit_not_addressed:'notAddressed'},
@@ -27,7 +27,7 @@ function channelLabel(raw){const s=String(raw||'').toLocaleLowerCase('tr');if(!s
 function whoFromMethod(m){const s=String(m||'').toLowerCase();if(/agent/.test(s))return 'Emlakçı';if(/seller/.test(s))return 'Satıcı';if(/publisher|listing/.test(s))return 'İlan sahibi';return ''}
 // A long seller message is cut around the words that matter for this criterion.
 const FOCUS={archaeological_sit:/sit|arkeoloj/i,natural_sit:/sit|doğal/i,neighbor_access:/yol|cephe|kadastr/i};
-function quote(claim,kind){let t=String(claim||'').trim(),who='';if(!t||isEnglish(t)||/^eski yol doğrulaması/i.test(t))return {text:'',who};const m=t.match(/^(satıcı|emlakçı)\s*:\s*['‘’“"](.+)['’”"]\s*$/i);if(m){who=m[1][0].toLocaleUpperCase('tr')+m[1].slice(1).toLocaleLowerCase('tr');t=m[2]}if(t.length<=70)return {text:t,who};const at=t.search(FOCUS[kind]||/$^/),start=at>40?t.lastIndexOf(' ',at-12)+1:0,end=start+68,cut=t.slice(start,end).trim();return {text:`${start?'…':''}${cut}${end<t.length?'…':''}`,who}}
+function quote(claim,kind){let t=String(claim||'').trim(),who='';if(!t||isEnglish(t)||/^eski yol doğrulaması/i.test(t))return {text:'',who};const m=t.match(/^(satıcı|emlakçı|sen)\s*:\s*['‘’“"](.+)['’”"]\s*$/i);if(m){who=m[1][0].toLocaleUpperCase('tr')+m[1].slice(1).toLocaleLowerCase('tr');t=m[2]}if(t.length<=70)return {text:t,who};const at=t.search(FOCUS[kind]||/$^/),start=at>40?t.lastIndexOf(' ',at-12)+1:0,end=start+68,cut=t.slice(start,end).trim();return {text:`${start?'…':''}${cut}${end<t.length?'…':''}`,who}}
 
 // Where a check's evidence came from: a state map layer, TKGM geometry, or a
 // seller / agent statement (who · where · quote · date).
@@ -38,7 +38,7 @@ function source(r,kind){
  const q=quote(m.claim,kind),any=v.source_role||m.claim||method||v.source_channel||(m.source&&!isPath(m.source));
  const who=ROLE[v.source_role]||q.who||whoFromMethod(method)||(any?'İlan sahibi':'');
  const where=channelLabel(v.source_channel)||channelLabel(m.source)||(/listing/i.test(method)?'ilan metni':/message|reply/i.test(method)?'Sahibinden mesajı':'');
- return {who,where,quote:q.text,at,badge:who==='Satıcı'?'Satıcı beyanı':who==='Emlakçı'?'Emlakçı beyanı':'İlan sahibi beyanı',tone:'statement'};
+ return {who,where,quote:q.text,at,badge:who==='Satıcı'?'Satıcı beyanı':who==='Emlakçı'?'Emlakçı beyanı':who==='Sen'?'Senin kararın':'İlan sahibi beyanı',tone:'statement'};
 }
 function sourceLine(s){if(s.label)return join(s.label,shortDate(s.at));if(!s.who&&!s.where&&!s.quote)return '';return join(s.who&&s.where?`${s.who}, ${s.where}`:s.who||s.where,s.quote&&`“${s.quote}”`,shortDate(s.at))}
 
