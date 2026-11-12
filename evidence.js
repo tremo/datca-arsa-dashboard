@@ -95,7 +95,9 @@ function roadModel(r){
 function naturalModel(r){
  const kind='natural_sit',raw=String(r.evidence?.doğalSit||'missing'),sit=String(r.sitStatus||''),result=resultOf(r,kind),m=cmeta(r,kind);
  const layer=/says|polygon_overlay/i.test(m.method||'')||/Resmî katman/i.test(r.sitEvidence||'');
- const src=layer?{label:'Bakanlık sit haritası (SAYS)',at:m.observedAt,badge:'Resmî kaynak',tone:'official'}:source(r,kind),line=sourceLine(src);
+ // While the ministry's server is closed the answer comes from the last downloaded copy of the layer: the label says which day's copy.
+ const copy=m.copyOf&&!Number.isNaN(Date.parse(m.copyOf))?` · haritanın ${new Date(m.copyOf).toLocaleDateString('tr-TR',{day:'numeric',month:'long',year:'numeric'})} kopyası`:'';
+ const src=layer?{label:'Bakanlık sit haritası (SAYS)'+copy,at:m.observedAt,badge:'Resmî kaynak',tone:'official'}:source(r,kind),line=sourceLine(src);
  if(r.boundaryNote)return model(r,'natural','edge','1. derece doğal sit sınırında',join('Bakanlık sit haritası: parsel sınıra çok yakın ya da küçük bir kısmı içinde; sınırı kontrol et',shortDate(m.observedAt)),{badge:'Sınırda · kontrol et',tone:'provisional'});
  if(/^1\./.test(sit))return model(r,'natural','no','1. derece doğal sit: var · eler',line||'Kaynak kayıtlı değil',{badge:src.badge,tone:'conflict'});
  if(exclusionSays(r,'natural1'))return model(r,'natural','no','1. derece doğal sit: var · eler','Eleme nedeninde yazıyor',{badge:'Eleme nedeni',tone:'conflict'});
