@@ -1084,8 +1084,12 @@ table.compare{border-collapse:separate;border-spacing:0;width:max-content;min-wi
 .ask-choice{display:flex;gap:6px;padding:8px 0 8px 54px}.ask-choice button{min-height:38px;padding:6px 14px;font-size:14px}
 .ask-choice button[aria-pressed=true][data-c=ask]{background:var(--green);color:#fff;border-color:var(--green)}
 .ask-choice button[aria-pressed=true][data-c=hold]{background:#f5e9d0;color:#76551d;border-color:var(--gold)}
+.ask-choice .ask-mark{margin-left:auto}.ask-choice .ask-mark+.ask-mark{margin-left:0}
+.ask-choice .ask-mark[aria-pressed=true]{background:#fff4cf;color:#6d5410;border-color:var(--gold)}
+.ask-choice{flex-wrap:wrap}
 .ask-detail{padding:0 14px 14px 68px;font-size:14px}.ask-detail blockquote{margin:6px 0 10px;padding:10px 12px;background:var(--soft);border-radius:10px}
 .ask-cases{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}.ask-case{border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:140px}
 .ask-case span,.ask-case small{display:block;font-size:12px;color:var(--muted)}.ask-case b{font-size:20px;font-variant-numeric:tabular-nums}.ask-case b.up{color:var(--green)}.ask-case b.down{color:var(--red)}
 .ask-out{color:var(--red);font-size:13px}
 @media (max-width:640px){.ask-choice{padding-left:0}.ask-detail{padding-left:14px}.ask-choice button{flex:1}}
+@media (max-width:640px){.ask-choice .ask-mark{margin-left:0;flex:1 1 40%}}
