@@ -22,7 +22,8 @@ function card(r){const best=r.if_answered?.cases?.[0]?.score,tk=r.links?.tkgm,sh
  <span class="ask-choice">${btn('ask','Sor')}${btn('hold','Beklet')}<button type="button" data-id="${esc(r.listing_id)}" data-c="exclude" title="İlgilenmiyorum: ilan elenir">Ele</button>${mark('shortlist','★ Kısa liste','Kısa listeme ekle')}${mark('maybe','☆ Belki','Belki dedim')}</span></summary>
  <div class="ask-detail">${r.text?`<p class="dt-note">Gönderilecek mesaj:</p><blockquote>${esc(r.text)}</blockquote>`:`<p class="dt-note">Şu an sorulacak bir şey yok: ${esc(r.why_not||'—')}</p>`}${cases(r)}
  ${r.lastMessage?`<p class="dt-note">Son mesaj: ${esc(SENT[r.lastMessage.state]||r.lastMessage.state)} · ${esc(new Date(r.lastMessage.at).toLocaleDateString('tr-TR'))}</p>`:''}</div></details>`}
-function draw(){rows.forEach(r=>r.eff=effective(r));const pick=FILTERS.find(f=>f[0]===filter)[2],view=rows.filter(pick);
+// A listing eliminated on the dashboard (here or on its own page) leaves this list at once; Verda drops it from the board on its next publish.
+function draw(){rows=rows.filter(r=>feedback.get(r.listing_id)?.decision!=='excluded');rows.forEach(r=>r.eff=effective(r));const pick=FILTERS.find(f=>f[0]===filter)[2],view=rows.filter(pick);
  $('asksFilters').innerHTML=FILTERS.map(([k,label,f])=>`<button type="button" data-f="${k}" aria-pressed="${k===filter}">${label} <b>${num(rows.filter(f).length)}</b></button>`).join('');
  $('asksBody').innerHTML=view.length?view.map(card).join(''):`<p class="notice">${filter==='undecided'?'Karar bekleyen ilan kalmadı.':'Bu süzgece uyan ilan yok.'}</p>`}
 $('asksFilters').onclick=e=>{const b=e.target.closest('button');if(b){filter=b.dataset.f;draw()}};
