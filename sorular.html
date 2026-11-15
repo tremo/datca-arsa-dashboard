@@ -1,0 +1,19 @@
+<!doctype html>
+<html lang="tr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#f5f4ef">
+  <title>Datça · Soru onayı</title>
+  <link rel="stylesheet" href="ui.css">
+</head>
+<body class="status-page asks-page">
+  <header class="topbar"><div class="container"><a class="brand" href="index.html">Datça <span>/ arsa araştırması</span></a><nav aria-label="Ana menü"><a href="index.html">İlanlar</a><a href="map.html">Harita</a><a href="compare.html">Karşılaştır</a><a href="sorular.html" aria-current="page">Soru onayı</a><a href="durum.html">Durum</a><button id="signOut" hidden>Çıkış</button><a href="http://verda.localhost:18771/control" class="nav-local" title="Ajanların yerel paneli: yalnız Verda’nın çalıştığı Mac’te açılır" target="_blank" rel="noopener">Verda paneli ↗</a></nav></div></header>
+  <main class="container">
+    <section class="hero"><h1>Soru onayı</h1><p>Satıcıya yalnız “Sor” dediğin ilanlara soru gider. “Beklet” ilanı tutar ama yazmaz; “Ele” ilanı çıkarır. Bir ilana dokununca gidecek mesajı ve cevaba göre puanın ne olacağını görürsün.</p><div id="source" class="source">Yalnız yetkili hesap</div><p id="asksMeta" class="source"></p></section>
+    <section id="gate" class="gate" aria-live="polite"><h2 id="gateTitle">Giriş gerekli</h2><p id="authMessage">Bu sayfa yalnız yetkili Google hesabına açık.</p><button id="signIn" class="primary">Google ile giriş yap</button><button id="retry" hidden>Yeniden dene</button></section>
+    <div id="workspace" hidden><div id="asksFilters" class="asks-filters" role="group" aria-label="Süzgeç"></div><div id="asksBody"></div></div>
+  </main>
+  <script type="module" src="sorular.js"></script>
+</body>
+</html>
