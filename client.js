@@ -111,3 +111,9 @@ export async function saveFeedback(id,note,decision){if(!auth.currentUser)throw 
 const assets=new Map();
 export function clearAssets(){assets.clear()}
 export async function getAsset(id){if(assets.has(id))return assets.get(id);const d=await getDoc(doc(db,'evidenceAssets',id));if(!d.exists())throw Error('Kanıt görseli bulunamadı');const v=d.data();if(!/^image\/(jpeg|png|webp|avif)$/.test(v.mime))throw Error('Desteklenmeyen görsel');const src=`data:${v.mime};base64,${v.chunks.join('')}`;assets.set(id,src);return src}
+// Soru onayı: Verda's list of seller questions (meta/v2asks) and the owner's word on each. A refused or missing read returns null.
+export async function loadV2Asks(){try{const d=await getDoc(doc(db,'meta','v2asks'));return d.exists()?decode(d.data()):null}catch{return null}}
+// 'ask' | 'hold' | '' (no decision). Only this field is written; Verda reads it within about fifteen minutes.
+export async function saveAskChoice(id,value){if(!auth.currentUser)throw Error('Oturum kapalı');const by=auth.currentUser.email,v={listingId:String(id),askChoice:{value,at:serverTimestamp()},updatedBy:by,updatedAt:serverTimestamp()};await setDoc(doc(db,'listingFeedback',String(id)),v,{merge:true});return {...v,askChoice:{value,at:new Date()}}}
+// "Ele" here is the same "İlgilenmiyorum" as on a listing; the note is left as it is.
+export async function saveDecisionOnly(id,decision){if(!auth.currentUser)throw Error('Oturum kapalı');const by=auth.currentUser.email,v={listingId:String(id),decision,updatedBy:by,updatedAt:serverTimestamp()};await setDoc(doc(db,'listingFeedback',String(id)),v,{merge:true});return v}

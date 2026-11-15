@@ -1072,3 +1072,20 @@ table.compare{border-collapse:separate;border-spacing:0;width:max-content;min-wi
 .today-where a[data-today-open]{font-weight:600}
 .today-where .mini-link{margin-left:8px}
 .today-ask{color:var(--muted)}
+/* Soru onayı (sorular.html) */
+.asks-filters{display:flex;gap:6px;flex-wrap:wrap;margin:0 0 12px}.asks-filters button{min-height:36px;padding:5px 12px;font-size:13px;font-weight:500}
+.asks-filters button[aria-pressed=true]{background:var(--green);color:#fff;border-color:var(--green)}
+.asks-page .ask-card{padding:0;overflow:hidden}.ask-card>summary{list-style:none;cursor:pointer;display:block;padding:12px 14px 4px}.ask-card>summary::-webkit-details-marker{display:none}
+.ask-card.is-ask{border-left:4px solid var(--green)}.ask-card.is-hold{border-left:4px solid var(--gold)}
+.ask-score{float:left;width:42px;height:42px;margin:2px 12px 0 0;border-radius:50%;display:grid;place-items:center;font-weight:700;background:var(--soft);font-variant-numeric:tabular-nums}
+.ask-main{display:block;overflow:hidden}.ask-main>b{display:block;font-size:15px}.ask-main small{display:block;font-size:12px}
+.ask-line{display:flex;gap:6px;flex-wrap:wrap;align-items:center;font-size:13px}.ask-line .ask-link{min-height:28px;padding:2px 9px;font-size:12px;border-radius:8px}
+.ask-warn{color:var(--gold)}
+.ask-choice{display:flex;gap:6px;padding:8px 0 8px 54px}.ask-choice button{min-height:38px;padding:6px 14px;font-size:14px}
+.ask-choice button[aria-pressed=true][data-c=ask]{background:var(--green);color:#fff;border-color:var(--green)}
+.ask-choice button[aria-pressed=true][data-c=hold]{background:#f5e9d0;color:#76551d;border-color:var(--gold)}
+.ask-detail{padding:0 14px 14px 68px;font-size:14px}.ask-detail blockquote{margin:6px 0 10px;padding:10px 12px;background:var(--soft);border-radius:10px}
+.ask-cases{display:flex;gap:8px;flex-wrap:wrap;margin:6px 0}.ask-case{border:1px solid var(--line);border-radius:10px;padding:6px 10px;min-width:140px}
+.ask-case span,.ask-case small{display:block;font-size:12px;color:var(--muted)}.ask-case b{font-size:20px;font-variant-numeric:tabular-nums}.ask-case b.up{color:var(--green)}.ask-case b.down{color:var(--red)}
+.ask-out{color:var(--red);font-size:13px}
+@media (max-width:640px){.ask-choice{padding-left:0}.ask-detail{padding-left:14px}.ask-choice button{flex:1}}
